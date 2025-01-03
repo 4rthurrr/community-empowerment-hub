@@ -1,0 +1,40 @@
+/* ProductCard.css */
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px;
+    max-width: 300px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    text-align: left;
+  }
+  
+  .product-card h3 {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .product-card p {
+    font-size: 0.9em;
+    color: #666;
+    margin: 4px 0;
+  }
+  
+  .view-details-link {
+    display: inline-block;
+    margin-top: 12px;
+    color: #007BFF;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  
+  .view-details-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+  

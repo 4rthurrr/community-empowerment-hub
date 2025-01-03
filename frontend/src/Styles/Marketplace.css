@@ -1,0 +1,9 @@
+
+.marketplace-container {
+  padding: 20px;
+}
+
+.products-grid {
+  display: flex;
+  flex-wrap: wrap;
+}

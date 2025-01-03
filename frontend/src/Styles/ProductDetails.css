@@ -1,0 +1,40 @@
+.product-details-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.product-name {
+  color: #333;
+}
+
+.product-image {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.product-description {
+  font-size: 18px;
+  color: #555;
+}
+
+.product-price {
+  font-size: 20px;
+  color: #333;
+  font-weight: bold;
+}
+
+.product-seller {
+  font-size: 18px;
+  color: #555;
+}
+
+.order-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
