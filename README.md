@@ -56,5 +56,5 @@ The **Community Empowerment Hub** is a comprehensive web application designed to
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/community-empowerment-hub.git
+   git clone https://github.com/4rthurrr/community-empowerment-hub.git
    cd community-empowerment-hub
