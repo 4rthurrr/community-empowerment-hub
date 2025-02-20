@@ -1,8 +1,8 @@
 {
-  "name": "mern-auth",
+  "name": "community-empowerment-hub",
   "version": "1.0.0",
   "type": "module",
-  "description": "MERN authentication system",
+  "description": "community-empowerment-hub",
   "main": "server.js",
   "scripts": {
     "start": "node --no-warnings backend/server.js",
