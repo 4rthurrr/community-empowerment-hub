@@ -7,10 +7,9 @@ function AuthLayout() {
         <div className="max-w-md space-y-6 text-center text-primary-foreground">
           
           <h1 className="gradient-text text-4xl font-extrabold tracking-tight">
-          
-            Welcome to 
-            Community Empowerment
-            Hub
+            Welcome to Community Empowerment Hub
+            <br />
+            <span className="text-2xl font-light">A platform for community empowerment</span>
           </h1>
         </div>
       </div>
