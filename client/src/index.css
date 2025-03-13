@@ -1,0 +1,69 @@
+/* filepath: c:\Users\OWNER\Documents\GitHub\mern-ecommerce-2024\client\src\index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 0 0% 13%; /* Dark gray text for high contrast */
+    --card: 0 0% 98%; /* Slightly off-white card background */
+    --card-foreground: 0 0% 13%; /* Dark gray text for cards */
+    --popover: 0 0% 100%; /* White popover background */
+    --popover-foreground: 0 0% 13%; /* Dark gray popover text */
+    --primary: 216 98% 52%; /* Apple blue for buttons and links */
+    --primary-foreground: 0 0% 100%; /* White text on blue buttons */
+    --secondary: 0 0% 95%; /* Soft gray for secondary elements */
+    --secondary-foreground: 0 0% 13%; /* Dark text for secondary elements */
+    --muted: 0 0% 90%; /* Light gray muted elements */
+    --muted-foreground: 0 0% 40%; /* Mid-gray muted text */
+    --accent: 0 0% 95%; /* Soft gray accent color */
+    --accent-foreground: 0 0% 13%; /* Dark gray accent text */
+    --destructive: 0 84% 60%; /* Apple’s red for errors */
+    --destructive-foreground: 0 0% 100%; /* White text on red buttons */
+    --border: 0 0% 89%; /* Subtle gray borders */
+    --input: 0 0% 95%; /* Light gray input background */
+    --ring: 216 98% 52%; /* Apple blue for focus rings */
+    --radius: 0.5rem; /* Rounded corners for modern design */
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* Pure black for dark mode */
+    --foreground: 0 0% 85%; /* Light gray text */
+    --card: 0 0% 10%; /* Very dark gray card background */
+    --card-foreground: 0 0% 85%; /* Light gray text for cards */
+    --popover: 0 0% 12%; /* Slightly lighter dark popover */
+    --popover-foreground: 0 0% 85%; /* Light text for popovers */
+    --primary: 216 98% 52%; /* Blue for primary action buttons */
+    --primary-foreground: 0 0% 100%; /* White text on blue buttons */
+    --secondary: 0 0% 15%; /* Dark gray secondary elements */
+    --secondary-foreground: 0 0% 85%; /* Light text for secondary elements */
+    --muted: 0 0% 20%; /* Dark gray muted elements */
+    --muted-foreground: 0 0% 60%; /* Medium gray muted text */
+    --accent: 0 0% 25%; /* Dark gray accent */
+    --accent-foreground: 0 0% 85%; /* Light text on accents */
+    --destructive: 0 84% 50%; /* Dark red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White text on red */
+    --border: 0 0% 25%; /* Subtle dark borders */
+    --input: 0 0% 20%; /* Dark input fields */
+    --ring: 216 98% 52%; /* Blue focus rings */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Gradient Text Effect */
+.gradient-text {
+  font-size: 3rem;
+  font-weight: bold;
+  background: linear-gradient(to right, #3b82f6, #a855f7, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
