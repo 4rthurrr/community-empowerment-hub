@@ -1,29 +1,5 @@
 {
-  "name": "community-empowerment-hub",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "community-empowerment-hub",
-  "main": "server.js",
-  "scripts": {
-    "start": "node --no-warnings backend/server.js",
-    "server": "nodemon backend/server.js",
-    "client": "npm run dev --prefix frontend",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
-  },
-  "author": "Brad Traversy",
-  "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "express-async-handler": "^1.2.0",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.1.0",
-    "vite": "^6.1.1"
-  },
-  "devDependencies": {
-    "concurrently": "^8.0.1",
-    "nodemon": "^2.0.22"
+    "tailwindcss": "^4.0.13"
   }
 }
