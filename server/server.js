@@ -16,8 +16,6 @@ const shopReviewRouter = require("./routes/shop/review-routes");
 
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
-const serverless = require('serverless-http');
-
 console.log("Connecting to MongoDB...");
 
 mongoose
@@ -61,5 +59,3 @@ app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/common/feature", commonFeatureRouter);
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
-
-module.exports.handler = serverless(app);
