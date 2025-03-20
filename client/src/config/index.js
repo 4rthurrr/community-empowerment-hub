@@ -69,25 +69,15 @@ export const addProductFormElements = [
     name: "category",
     componentType: "select",
     options: [
-      { id: "men", label: "Men" },
-      { id: "women", label: "Women" },
-      { id: "kids", label: "Kids" },
-      { id: "accessories", label: "Accessories" },
-      { id: "footwear", label: "Footwear" },
+      { id: "clothes", label: "Clothes" },
+      { id: "electronics", label: "Electronics" },
     ],
   },
   {
-    label: "Brand",
-    name: "brand",
+    label: "Subcategory",
+    name: "subcategory",
     componentType: "select",
-    options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
-    ],
+    options: [], // This will be dynamically populated
   },
   {
     label: "Price",
@@ -111,6 +101,19 @@ export const addProductFormElements = [
     placeholder: "Enter total stock",
   },
 ];
+
+export const subcategoryOptionsMap = {
+  clothes: [
+    { id: "clothes-men", label: "Men's Clothes" },
+    { id: "clothes-women", label: "Women's Clothes" },
+    { id: "clothes-kids", label: "Kids' Clothes" },
+  ],
+  electronics: [
+    { id: "electronics-mobiles", label: "Mobiles" },
+    { id: "electronics-laptops", label: "Laptops" },
+    { id: "electronics-accessories", label: "Electronics Accessories" },
+  ],
+};
 
 export const shoppingViewHeaderMenuItems = [
   {
@@ -180,13 +183,13 @@ export const filterOptions = {
     { id: "accessories", label: "Accessories" },
     { id: "footwear", label: "Footwear" },
   ],
-  brand: [
-    { id: "nike", label: "Nike" },
-    { id: "adidas", label: "Adidas" },
-    { id: "puma", label: "Puma" },
-    { id: "levi", label: "Levi's" },
-    { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+  subcategory: [
+    { id: "clothes-men", label: "Men's Clothes" },
+    { id: "clothes-women", label: "Women's Clothes" },
+    { id: "clothes-kids", label: "Kids' Clothes" },
+    { id: "electronics-mobiles", label: "Mobiles" },
+    { id: "electronics-laptops", label: "Laptops" },
+    { id: "electronics-accessories", label: "Electronics Accessories" },
   ],
 };
 
