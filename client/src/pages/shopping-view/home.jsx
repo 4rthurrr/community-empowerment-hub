@@ -32,11 +32,20 @@ import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { getFeatureImages } from "@/store/common-slice";
 
 const categoriesWithIcon = [
-  { id: "men", label: "Men", icon: ShirtIcon },
-  { id: "women", label: "Women", icon: CloudLightning },
-  { id: "kids", label: "Kids", icon: BabyIcon },
+  { id: "pottery_glass", label: "Pottery & Glass", icon: Images },
+  { id: "electronics", label: "Electronics", icon: Airplay },
+  { id: "clothing", label: "Clothing", icon: ShirtIcon },
   { id: "accessories", label: "Accessories", icon: WatchIcon },
   { id: "footwear", label: "Footwear", icon: UmbrellaIcon },
+];
+
+const subcategoriesWithIcon = [
+  { id: "mobile_phones", label: "Mobile Phones", icon: Shirt },
+  { id: "laptops", label: "Laptops", icon: WashingMachine },
+  { id: "headphones", label: "Headphones", icon: ShoppingBasket },
+  { id: "mens_clothing", label: "Men's Clothing", icon: ShirtIcon },
+  { id: "womens_clothing", label: "Women's Clothing", icon: CloudLightning },
+  { id: "kids_clothing", label: "Kids' Clothing", icon: BabyIcon },
 ];
 
 const brandsWithIcon = [
@@ -164,11 +173,12 @@ function ShoppingHome() {
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
-            Shop by category
+            Shop by Category
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categoriesWithIcon.map((categoryItem) => (
               <Card
+                key={categoryItem.id}
                 onClick={() =>
                   handleNavigateToListingPage(categoryItem, "category")
                 }
@@ -186,16 +196,17 @@ function ShoppingHome() {
 
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by Brand</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Shop by Subcategory</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {brandsWithIcon.map((brandItem) => (
+            {subcategoriesWithIcon.map((subcategoryItem) => (
               <Card
-                onClick={() => handleNavigateToListingPage(brandItem, "brand")}
+                key={subcategoryItem.id}
+                onClick={() => handleNavigateToListingPage(subcategoryItem, "subcategory")}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
               >
                 <CardContent className="flex flex-col items-center justify-center p-6">
-                  <brandItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{brandItem.label}</span>
+                  <subcategoryItem.icon className="w-12 h-12 mb-4 text-primary" />
+                  <span className="font-bold">{subcategoryItem.label}</span>
                 </CardContent>
               </Card>
             ))}

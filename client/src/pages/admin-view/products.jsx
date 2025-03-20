@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
-import { addProductFormElements } from "@/config";
+import { addProductFormElements, subcategoryOptionsMap } from "@/config";
 import {
   addNewProduct,
   deleteProduct,
@@ -24,7 +24,7 @@ const initialFormData = {
   title: "",
   description: "",
   category: "",
-  brand: "",
+  subcategory: "",
   price: "",
   salePrice: "",
   totalStock: "",
@@ -39,6 +39,7 @@ function AdminProducts() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
+  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
 
   const { productList } = useSelector((state) => state.adminProducts);
   const dispatch = useDispatch();
@@ -96,9 +97,27 @@ function AdminProducts() {
       .every((item) => item);
   }
 
+  function handleCategoryChange(event) {
+    const selectedCategory = event.target.value;
+    const subcategoryOptions = subcategoryOptionsMap[selectedCategory] || [];
+    setFormData({
+      ...formData,
+      category: selectedCategory,
+      subcategory: "",
+    });
+    setSubcategoryOptions(subcategoryOptions);
+  }
+
   useEffect(() => {
     dispatch(fetchAllProducts());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (formData.category) {
+      const subcategoryOptions = subcategoryOptionsMap[formData.category] || [];
+      setSubcategoryOptions(subcategoryOptions);
+    }
+  }, [formData.category]);
 
   console.log(formData, "productList");
 
@@ -151,7 +170,21 @@ function AdminProducts() {
               formData={formData}
               setFormData={setFormData}
               buttonText={currentEditedId !== null ? "Edit" : "Add"}
-              formControls={addProductFormElements}
+              formControls={addProductFormElements.map((element) => {
+                if (element.name === "subcategory") {
+                  return {
+                    ...element,
+                    options: subcategoryOptions,
+                  };
+                }
+                if (element.name === "category") {
+                  return {
+                    ...element,
+                    onChange: handleCategoryChange,
+                  };
+                }
+                return element;
+              })}
               isBtnDisabled={!isFormValid()}
             />
           </div>
@@ -162,3 +195,4 @@ function AdminProducts() {
 }
 
 export default AdminProducts;
+
