@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 function CommonForm({
   formControls,
   formData,
+  formErrors = {}, // Add formErrors parameter with default empty object
   setFormData,
   onSubmit,
   buttonText,
@@ -37,6 +38,8 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            // Add error styling if there's an error for this field
+            className={formErrors[getControlItem.name] ? "border-red-500" : ""}
           />
         );
 
@@ -52,7 +55,9 @@ function CommonForm({
             }
             value={value}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger 
+              className={`w-full ${formErrors[getControlItem.name] ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder={getControlItem.label} />
             </SelectTrigger>
             <SelectContent>
@@ -81,6 +86,8 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            // Add error styling if there's an error for this field
+            className={formErrors[getControlItem.name] ? "border-red-500" : ""}
           />
         );
 
@@ -100,6 +107,8 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            // Add error styling if there's an error for this field
+            className={formErrors[getControlItem.name] ? "border-red-500" : ""}
           />
         );
         break;
@@ -115,6 +124,12 @@ function CommonForm({
           <div className="grid w-full gap-1.5" key={controlItem.name}>
             <Label className="mb-1">{controlItem.label}</Label>
             {renderInputsByComponentType(controlItem)}
+            {/* Add error message if there's an error for this field */}
+            {formErrors[controlItem.name] && (
+              <p className="text-sm text-red-500 mt-1">
+                {formErrors[controlItem.name]}
+              </p>
+            )}
           </div>
         ))}
       </div>
