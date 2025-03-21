@@ -1,0 +1,78 @@
+.admin_action_btn_job_update {
+  background-color: green;
+  border-radius: 3px;
+  padding: 3px 10px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.admin_action_btn_job_delete {
+  background-color: red;
+  border-radius: 3px;
+  padding: 3px 10px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  margin-left: 10px;
+  text-transform: uppercase;
+}
+
+.application_view_continer {
+  padding: 50px 10%;
+}
+.application_job_card {
+  display: flex;
+  flex-direction: column;
+}
+.application_job_card_topic {
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 50px;
+}
+.application_job_card_id {
+  font-weight: 500;
+  font-size: 15px;
+  margin-bottom: 10px;
+  color: gray;
+  font-style: italic;
+}
+.application_job_card_contend {
+  color: gray;
+  font-weight: 500;
+  font-size: 23px;
+  text-transform: capitalize;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 15px;
+}
+.application_job_card_expdate{
+  font-weight: 500;
+  font-size: 15px;
+  color: gray;
+  font-style: italic;
+  text-align: end;
+  margin: 8px 0;
+
+}
+.application_job_card_pera{
+  font-weight: 400;
+  font-size: 19px;
+  color:black;
+  line-height: 32px;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+}
+.admin_download_btn{
+  background-color: #3b82f6;
+  border-radius: 3px;
+  padding: 5px 15px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+
+  text-transform: uppercase;
+}

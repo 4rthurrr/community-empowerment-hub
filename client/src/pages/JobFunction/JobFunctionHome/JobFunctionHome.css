@@ -1,0 +1,11 @@
+.nav_btn_job_poster{
+    background: linear-gradient(to right, #3b82f6, #a855f7, #ef4444);
+    border-radius: 3px;
+    padding: 5px 15px;
+    color: white;
+    cursor: pointer;
+    font-size: 25px;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-align: center;
+}

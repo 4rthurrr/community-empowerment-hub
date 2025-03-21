@@ -1,0 +1,104 @@
+.admin_nav_bar_job {
+  width: 100%;
+  padding: 10px 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+}
+.admin_nav_bar_job_lft{
+  display: flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+}
+.nav_logo_job {
+  text-transform: capitalize;
+  font-size: 25px;
+  font-weight: 500;
+}
+.admin_nav_item_job {
+  text-transform: uppercase;
+  font-weight: 500;
+  cursor: pointer;
+}
+.admin_nav_item_job:hover {
+  text-decoration: underline;
+  color: #043b94;
+}
+.admin_nav_item_job_active {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+.job_admin_continer {
+  padding: 25px 100px;
+}
+.job_admin_continer_topic {
+  text-align: center;
+  font-size: 30px;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin-bottom: 25px;
+}
+.admin_action_continer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+  margin-bottom: 40px;
+}
+.admin_serch {
+  width: 300px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid #3b82f6;
+}
+.admin_serch:focus {
+  outline: 0;
+}
+.admin_pdf_btn_job {
+  background-color: #3b82f6;
+  color: #fff;
+  padding: 5px 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.admin_table_continer_job {
+  width: 100%;
+}
+.admin_job_table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+.admin_th_job_tbl {
+  text-transform: uppercase;
+}
+.admin_th_job_tbl,
+.admin_td_job_tbl {
+  padding: 10px;
+  border: 1px solid black;
+}
+
+.admin_tr_job_tbl {
+  border-bottom: 1px solid black;
+}
+.admin_from_job_function {
+  width: 600px;
+  border: 1px solid #3b82f6;
+  padding: 15px;
+  border-radius: 3px;
+  margin: 0 auto;
+}
+
+.admin_from_job_function_topic {
+  text-align: center;
+  margin: 30px 0;
+  font-weight: 500;
+
+  font-size: 30px;
+}

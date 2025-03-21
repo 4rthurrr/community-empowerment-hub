@@ -23,6 +23,39 @@ import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
 
+{
+  /* JOB FUNCTION ROUTE */
+}
+{
+  /* -----Admin----- */
+}
+import AllJobPostAdmin from "./pages/JobFunction/Admin/AllJobPostAdmin";
+import AppliedUsersDetails from "./pages/JobFunction/Admin/AppliedUsersDetails";
+import AddBusinessManager from "./pages/JobFunction/Admin/AddBusinessManager";
+import AllBusinessManagers from "./pages/JobFunction/Admin/AllBusinessManagers";
+import JobAdminLogin from "./pages/JobFunction/Admin/JobAdminLogin";
+import UpdateBusinessManager from "./pages/JobFunction/Admin/UpdateBusinessManager";
+{
+  /* -----Business----- */
+}
+import AddJobPost from "./pages/JobFunction/Business/AddJobPost";
+import AllApplications from "./pages/JobFunction/Business/AllApplications";
+import JobPostDetails from "./pages/JobFunction/Business/JobPostDetails";
+import UpdatePost from "./pages/JobFunction/Business/UpdatePost";
+import BusinessManagerLogin from "./pages/JobFunction/Business/BusinessManagerLogin";
+import ViewJobPost from "./pages/JobFunction/Business/JobPostView";
+{
+  /* -----JobSeeker----- */
+}
+import AllJobDetails from "./pages/JobFunction/Jobseeker/AllJobDetails";
+import ApplyForJob from "./pages/JobFunction/Jobseeker/ApplyForJob";
+import JobSeekerLogin from "./pages/JobFunction/Jobseeker/JobSeekerLogin";
+import JobSeekerRegister from "./pages/JobFunction/Jobseeker/JobSeekerRegister";
+import ViewJobPoster from "./pages/JobFunction/Jobseeker/ViewJobPoster";
+{
+  /* -----JobFunctionHome----- */
+}
+import JobFunctionHome from "./pages/JobFunction/JobFunctionHome/JobFunctionHome";
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
@@ -91,6 +124,39 @@ function App() {
         </Route>
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
+
+        {/* JOB FUNCTION ROUTE */}
+        {/* -----Admin----- */}
+        <Route path="/allJobPostAdmin" element={<AllJobPostAdmin />} />
+        <Route path="/appliedUsersDetails" element={<AppliedUsersDetails />} />
+        <Route path="/addBusinessManager" element={<AddBusinessManager />} />
+        <Route path="/allBusinessManagers" element={<AllBusinessManagers />} />
+        <Route path="/jobAdminLogin" element={<JobAdminLogin />} />
+        <Route
+          path="/updateBusinessManager/:id"
+          element={<UpdateBusinessManager />}
+        />
+
+        {/* -----Business----- */}
+        <Route path="/addJobPost" element={<AddJobPost />} />
+        <Route path="/allJobApplication" element={<AllApplications />} />
+        <Route path="/jobPostDetails" element={<JobPostDetails />} />
+        <Route path="/updateJobPost/:id" element={<UpdatePost />} />
+        <Route path="/viewJobPost/:id" element={<ViewJobPost />} />
+        <Route
+          path="/businessManagerLogin"
+          element={<BusinessManagerLogin />}
+        />
+
+        {/* -----JobSeeker----- */}
+        <Route path="/allJobDetails" element={<AllJobDetails />} />
+        <Route path="/applyForJob" element={<ApplyForJob />} />
+        <Route path="/jobSeekerLogin" element={<JobSeekerLogin />} />
+        <Route path="/jobSeekerRegister" element={<JobSeekerRegister />} />
+        <Route path="/viewJobPoster/:id" element={<ViewJobPoster />} />
+
+        {/* -----Business----- */}
+        <Route path="/jobFunctionHome" element={<JobFunctionHome />} />
       </Routes>
     </div>
   );
