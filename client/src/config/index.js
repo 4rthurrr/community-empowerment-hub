@@ -117,8 +117,13 @@ export const subcategoryOptionsMap = {
 
 export const shoppingViewHeaderMenuItems = [
   {
-    id: "home",
+    id: "landing",
     label: "Home",
+    path: "/shop/land",
+  },
+  {
+    id: "home",
+    label: "Marketplace",
     path: "/shop/home",
   },
   {

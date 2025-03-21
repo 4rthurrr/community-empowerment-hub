@@ -56,7 +56,7 @@ function AuthLogin() {
             title: data?.payload?.message,
           });
           // Redirect to dashboard or home page after successful login
-          navigate("/");
+          navigate("/shop/land");
         } else {
           toast({
             title: data?.payload?.message,
