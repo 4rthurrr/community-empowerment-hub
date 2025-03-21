@@ -36,7 +36,25 @@ const addProduct = async (req, res) => {
       averageReview,
     } = req.body;
 
-    console.log(averageReview, "averageReview");
+    // Validate required fields
+    if (!image || !title || !description || !category || !subcategory || !price || !totalStock) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields for product creation"
+      });
+    }
+
+    // Handle numeric conversions
+    const numericPrice = Number(price);
+    const numericSalePrice = salePrice ? Number(salePrice) : 0;
+    const numericTotalStock = Number(totalStock);
+    
+    if (isNaN(numericPrice) || isNaN(numericSalePrice) || isNaN(numericTotalStock)) {
+      return res.status(400).json({
+        success: false,
+        message: "Price, Sale Price and Total Stock must be valid numbers"
+      });
+    }
 
     const newlyCreatedProduct = new Product({
       image,
@@ -45,10 +63,10 @@ const addProduct = async (req, res) => {
       category,
       subcategory,
       brand,
-      price,
-      salePrice,
-      totalStock,
-      averageReview,
+      price: numericPrice,
+      salePrice: numericSalePrice,
+      totalStock: numericTotalStock,
+      averageReview: averageReview || 0,
     });
 
     await newlyCreatedProduct.save();
@@ -57,10 +75,16 @@ const addProduct = async (req, res) => {
       data: newlyCreatedProduct,
     });
   } catch (e) {
-    console.log(e);
+    console.log("Error adding product:", e);
+    if (e.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error: " + e.message,
+      });
+    }
     res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Server error occurred while adding product",
     });
   }
 };
@@ -107,17 +131,27 @@ const editProduct = async (req, res) => {
         message: "Product not found",
       });
 
+    // Handle numeric conversions safely
+    const numericPrice = price !== undefined && price !== "" ? Number(price) : findProduct.price;
+    const numericSalePrice = salePrice !== undefined && salePrice !== "" ? Number(salePrice) : findProduct.salePrice;
+    const numericTotalStock = totalStock !== undefined && totalStock !== "" ? Number(totalStock) : findProduct.totalStock;
+    
+    if (isNaN(numericPrice) || isNaN(numericSalePrice) || isNaN(numericTotalStock)) {
+      return res.status(400).json({
+        success: false,
+        message: "Price, Sale Price and Total Stock must be valid numbers"
+      });
+    }
+
     findProduct.title = title || findProduct.title;
     findProduct.description = description || findProduct.description;
     findProduct.category = category || findProduct.category;
     findProduct.subcategory = subcategory || findProduct.subcategory;
-    // findProduct.brand = brand || findProduct.brand;
-    findProduct.price = price === "" ? 0 : price || findProduct.price;
-    findProduct.salePrice =
-      salePrice === "" ? 0 : salePrice || findProduct.salePrice;
-    findProduct.totalStock = totalStock || findProduct.totalStock;
+    findProduct.price = numericPrice;
+    findProduct.salePrice = numericSalePrice;
+    findProduct.totalStock = numericTotalStock;
     findProduct.image = image || findProduct.image;
-    findProduct.averageReview = averageReview || findProduct.averageReview;
+    findProduct.averageReview = averageReview !== undefined ? Number(averageReview) : findProduct.averageReview;
 
     await findProduct.save();
     res.status(200).json({
@@ -125,10 +159,22 @@ const editProduct = async (req, res) => {
       data: findProduct,
     });
   } catch (e) {
-    console.log(e);
+    console.log("Error editing product:", e);
+    if (e.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error: " + e.message,
+      });
+    }
+    if (e.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
+      });
+    }
     res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Server error occurred while editing product",
     });
   }
 };
