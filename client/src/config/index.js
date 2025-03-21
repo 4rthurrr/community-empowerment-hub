@@ -136,6 +136,11 @@ export const shoppingViewHeaderMenuItems = [
     label:"AI Tool",
     path:"/shop/ai",
   },
+  {
+    id:"jobs",
+    label:"Jobs",
+    path:"/shop/jobs",
+  },
   /*{
     id: "men",
     label: "Men",

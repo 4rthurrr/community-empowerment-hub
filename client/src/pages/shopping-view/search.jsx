@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import Footer from "@/components/shopping-view/footer";
 
 function SearchProducts() {
   const [keyword, setKeyword] = useState("");
@@ -115,6 +116,7 @@ function SearchProducts() {
         productDetails={productDetails}
       />
     </div>
+    
   );
 }
 
