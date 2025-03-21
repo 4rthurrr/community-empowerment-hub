@@ -195,7 +195,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">SM</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">Sarah Miller</p>
+                            <p className="font-bold">Sarath Nandasiri</p>
                             <p className="text-sm text-gray-600">Artisan Entrepreneur</p>
                           </div>
                         </div>
@@ -213,7 +213,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">JD</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">James Davis</p>
+                            <p className="font-bold">Sumanasiri Silva</p>
                             <p className="text-sm text-gray-600">Web Developer</p>
                           </div>
                         </div>
@@ -231,7 +231,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">MP</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">Maria Perez</p>
+                            <p className="font-bold">Madavi Anthony</p>
                             <p className="text-sm text-gray-600">Small Business Owner</p>
                           </div>
                         </div>
@@ -263,7 +263,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">AJ</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">Alex Johnson</p>
+                            <p className="font-bold">Ajith Preamadasa</p>
                             <p className="text-sm text-gray-600">Community Volunteer</p>
                           </div>
                         </div>
@@ -281,7 +281,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">KL</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">Kelly Lee</p>
+                            <p className="font-bold">Kamal Perera</p>
                             <p className="text-sm text-gray-600">Digital Freelancer</p>
                           </div>
                         </div>
@@ -299,7 +299,7 @@ function LandingPage() {
                             <span className="font-bold text-blue-600">TR</span>
                           </div>
                           <div className="ml-3">
-                            <p className="font-bold">Thomas Rivera</p>
+                            <p className="font-bold">Antonio Buddadasa</p>
                             <p className="text-sm text-gray-600">Marketing Specialist</p>
                           </div>
                         </div>
