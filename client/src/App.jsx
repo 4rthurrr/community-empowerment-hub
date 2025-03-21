@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
 import LandingPage from "./pages/shopping-view/landing";
+import AIBusinessAdvisorTool from "./pages/shopping-view/ai-tool";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -83,6 +84,7 @@ function App() {
           }
         >
           <Route path="land" element={<LandingPage />} />
+          <Route path="ai" element={<AIBusinessAdvisorTool />} />
           <Route path="home" element={<ShoppingHome />} />
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
