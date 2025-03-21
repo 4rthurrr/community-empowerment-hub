@@ -4,14 +4,13 @@ import { useDispatch, useSelector } from "react-redux";
 import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { createNewOrder } from "@/store/shop/order-slice";
-import { Navigate } from "react-router-dom";
+import { createNewOrder, getAllOrdersByUserId } from "@/store/shop/order-slice";
 import { useToast } from "@/components/ui/use-toast";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
-  const { approvalURL } = useSelector((state) => state.shopOrder);
+  // const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymemntStart] = useState(false);
   const dispatch = useDispatch();
@@ -32,7 +31,7 @@ function ShoppingCheckout() {
         )
       : 0;
 
-  function handleInitiatePaypalPayment() {
+  function handleInitiateCheckout() {
     if (cartItems.length === 0) {
       toast({
         title: "Your cart is empty. Please add items to proceed",
@@ -72,7 +71,7 @@ function ShoppingCheckout() {
         notes: currentSelectedAddress?.notes,
       },
       orderStatus: "pending",
-      paymentMethod: "paypal",
+      paymentMethod: "dummy",
       paymentStatus: "pending",
       totalAmount: totalCartAmount,
       orderDate: new Date(),
@@ -85,15 +84,25 @@ function ShoppingCheckout() {
       console.log(data, "sangam");
       if (data?.payload?.success) {
         setIsPaymemntStart(true);
+        // Store order details in the buyer's account under Order History
+        dispatch(getAllOrdersByUserId(user?.id));
+        toast({
+          title: "Order placed successfully!",
+          variant: "success",
+        });
       } else {
         setIsPaymemntStart(false);
+        toast({
+          title: "Failed to place order. Please try again.",
+          variant: "destructive",
+        });
       }
     });
   }
 
-  if (approvalURL) {
-    window.location.href = approvalURL;
-  }
+  // if (approvalURL) {
+  //   window.location.href = approvalURL;
+  // }
 
   return (
     <div className="flex flex-col">
@@ -108,7 +117,7 @@ function ShoppingCheckout() {
         <div className="flex flex-col gap-4">
           {cartItems && cartItems.items && cartItems.items.length > 0
             ? cartItems.items.map((item) => (
-                <UserCartItemsContent cartItem={item} />
+                <UserCartItemsContent key={item.productId} cartItem={item} />
               ))
             : null}
           <div className="mt-8 space-y-4">
@@ -118,10 +127,10 @@ function ShoppingCheckout() {
             </div>
           </div>
           <div className="mt-4 w-full">
-            <Button onClick={handleInitiatePaypalPayment} className="w-full">
+            <Button onClick={handleInitiateCheckout} className="w-full">
               {isPaymentStart
-                ? "Processing Paypal Payment..."
-                : "Checkout with Paypal"}
+                ? "Processing Order..."
+                : "Checkout"}
             </Button>
           </div>
         </div>
