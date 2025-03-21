@@ -2,7 +2,7 @@ import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { brandOptionsMap, categoryOptionsMap } from "@/config";
 import { Badge } from "../ui/badge";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, Store } from "lucide-react";
 
 function ShoppingProductTile({
   product,
@@ -53,7 +53,15 @@ function ShoppingProductTile({
           <div className="text-sm text-blue-600 font-medium mb-1">
             {categoryOptionsMap[product?.category] || product?.category}
           </div>
+          
+          {/* Seller information */}
+          <div className="flex items-center text-xs text-gray-500 mb-1">
+            <Store className="h-3 w-3 mr-1" />
+            <span>By {product?.seller?.userName || product?.userName || "Community Artisan"}</span>
+          </div>
+          
           <h2 className="text-lg font-bold mb-2 line-clamp-2">{product?.title}</h2>
+          
           <div className="flex items-end gap-2 mt-3">
             {product?.salePrice > 0 ? (
               <>
