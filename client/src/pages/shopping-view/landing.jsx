@@ -163,98 +163,157 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Impact Section with animated counters */}
-      <section className="py-20 bg-gray-50">
+      {/* Testimonials Section with Animation */}
+      <section className="py-16 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Community Impact</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Building stronger communities through collective action and support
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-            <div className="bg-white p-10 rounded-xl shadow-md transform hover:-translate-y-2 transition-all duration-300">
-              <div className="text-6xl font-bold text-blue-600 mb-4">{stats.volunteers}+</div>
-              <p className="text-xl font-medium">Community Members</p>
-              <div className="w-full bg-gray-200 h-2.5 rounded-full mt-4 overflow-hidden">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
-                  style={{ width: `${(stats.volunteers/500)*100}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-10 rounded-xl shadow-md transform hover:-translate-y-2 transition-all duration-300">
-              <div className="text-6xl font-bold text-purple-600 mb-4">{stats.training}+</div>
-              <p className="text-xl font-medium">Training Hours</p>
-              <div className="w-full bg-gray-200 h-2.5 rounded-full mt-4 overflow-hidden">
-                <div 
-                  className="bg-purple-600 h-2.5 rounded-full transition-all duration-500" 
-                  style={{ width: `${(stats.training/1000)*100}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="bg-white p-10 rounded-xl shadow-md transform hover:-translate-y-2 transition-all duration-300">
-              <div className="text-6xl font-bold text-green-600 mb-4">{stats.businesses}+</div>
-              <p className="text-xl font-medium">Local Businesses Supported</p>
-              <div className="w-full bg-gray-200 h-2.5 rounded-full mt-4 overflow-hidden">
-                <div 
-                  className="bg-green-600 h-2.5 rounded-full transition-all duration-500" 
-                  style={{ width: `${(stats.businesses/200)*100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Community Voices</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Hear from those who've experienced positive change through our platform
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="bg-gray-50 p-8 rounded-xl relative">
-              <div className="absolute -top-5 left-8 text-6xl text-gray-200">"</div>
-              <p className="text-lg text-gray-700 mb-6 relative z-10">
-                "The Hub's marketplace gave me a platform to sell my handcrafted products and build a sustainable business that supports my family. The skills workshops helped me improve my craftsmanship and business knowledge."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="font-bold text-blue-600">SM</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">Sarah Miller</p>
-                  <p className="text-gray-600">Artisan Entrepreneur</p>
-                </div>
+          <div className="relative">
+            {/* First row - moves right */}
+            <div className="testimonial-carousel relative overflow-hidden mb-6">
+              <div className="flex animate-carousel" 
+                   style={{
+                     animation: "scroll 30s linear infinite",
+                     width: "fit-content"
+                   }}>
+                {/* First set of testimonials */}
+                {[...Array(2)].map((_, setIndex) => (
+                  <div key={`row1-${setIndex}`} className="flex">
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "The Hub's marketplace gave me a platform to sell my handcrafted products and build a sustainable business that supports my family."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">SM</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">Sarah Miller</p>
+                            <p className="text-sm text-gray-600">Artisan Entrepreneur</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "After losing my job, I found work opportunities through the Hub's job portal. The community also helped me develop new digital skills."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">JD</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">James Davis</p>
+                            <p className="text-sm text-gray-600">Web Developer</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "I've been able to connect with mentors who guided me through starting my small business. The platform's resources changed my life."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">MP</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">Maria Perez</p>
+                            <p className="text-sm text-gray-600">Small Business Owner</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             
-            <div className="bg-gray-50 p-8 rounded-xl relative">
-              <div className="absolute -top-5 left-8 text-6xl text-gray-200">"</div>
-              <p className="text-lg text-gray-700 mb-6 relative z-10">
-                "After losing my job, I found work opportunities through the Hub's job portal. The community also helped me develop new digital skills that led to a full-time position. This platform truly changes lives."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="font-bold text-blue-600">JD</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">James Davis</p>
-                  <p className="text-gray-600">Web Developer</p>
-                </div>
+            {/* Second row - moves left */}
+            <div className="testimonial-carousel relative overflow-hidden">
+              <div className="flex animate-carousel" 
+                   style={{
+                     animation: "scroll 30s linear infinite reverse",
+                     width: "fit-content"
+                   }}>
+                {/* Second set of testimonials */}
+                {[...Array(2)].map((_, setIndex) => (
+                  <div key={`row2-${setIndex}`} className="flex">
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "The volunteer opportunities I found through the Hub connected me with my community in meaningful ways. I've built lasting skills."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">AJ</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">Alex Johnson</p>
+                            <p className="text-sm text-gray-600">Community Volunteer</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "As a single parent, the flexible work opportunities and skills training have been a lifeline. I can now work from home while caring for my children."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">KL</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">Kelly Lee</p>
+                            <p className="text-sm text-gray-600">Digital Freelancer</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="testimonial-slide flex-none w-[350px] p-3">
+                      <div className="bg-gray-50 p-6 rounded-xl relative h-full shadow-sm">
+                        <div className="absolute -top-4 left-6 text-5xl text-gray-200">"</div>
+                        <p className="text-base text-gray-700 mb-4 relative z-10">
+                          "The skills workshops transformed my career opportunities. I learned digital marketing and now help local businesses grow their online presence."
+                        </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-blue-600">TR</span>
+                          </div>
+                          <div className="ml-3">
+                            <p className="font-bold">Thomas Rivera</p>
+                            <p className="text-sm text-gray-600">Marketing Specialist</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Call to Action Section */}
+      {/* Impact Section with animated counters */}
       <section className="py-20 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Our Community Today</h2>
