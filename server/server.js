@@ -15,6 +15,11 @@ const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 
 const commonFeatureRouter = require("./routes/common/feature-routes");
+//JobFunction 
+const BusinessManagerRouter = require("./routes/JobFunction/BusninessManagerRoute");
+const JobPostRouter = require("./routes/JobFunction/JobPostRoute");
+const JobSeekerRouter = require("./routes/JobFunction/JobSeekerRoute");
+const ApplyJobRoute = require("./routes/JobFunction/ApplyJobRoute");
 
 console.log("Connecting to MongoDB...");
 
@@ -57,5 +62,11 @@ app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
+//JobFunction 
+app.use("/job/businessManager", BusinessManagerRouter);
+app.use("/job/jobpost", JobPostRouter);
+app.use("/job/jobSeeker", JobSeekerRouter);
+app.use("/job/applyJob", ApplyJobRoute);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
