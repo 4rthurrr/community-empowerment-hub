@@ -71,6 +71,9 @@ export const addProductFormElements = [
     options: [
       { id: "clothes", label: "Clothes" },
       { id: "electronics", label: "Electronics" },
+      { id: "agriculture", label: "Agriculture" },
+      { id: "healthcare", label: "Healthcare" },
+      { id: "handcraft", label: "Handcraft" },
     ],
   },
   {
@@ -112,6 +115,24 @@ export const subcategoryOptionsMap = {
     { id: "electronics-mobiles", label: "Mobiles" },
     { id: "electronics-laptops", label: "Laptops" },
     { id: "electronics-accessories", label: "Electronics Accessories" },
+  ],
+  agriculture: [
+    { id: "agriculture-organic", label: "Organic Products" },
+    { id: "agriculture-seeds", label: "Seeds & Seedlings" },
+    { id: "agriculture-tools", label: "Farming Tools" },
+    { id: "agriculture-fertilizers", label: "Natural Fertilizers" },
+  ],
+  healthcare: [
+    { id: "healthcare-herbal", label: "Herbal Remedies" },
+    { id: "healthcare-wellness", label: "Wellness Products" },
+    { id: "healthcare-personal", label: "Personal Care" },
+    { id: "healthcare-hygiene", label: "Hygiene Products" },
+  ],
+  handcraft: [
+    { id: "handcraft-pottery", label: "Pottery & Ceramics" },
+    { id: "handcraft-textiles", label: "Handwoven Textiles" },
+    { id: "handcraft-jewelry", label: "Handmade Jewelry" },
+    { id: "handcraft-decor", label: "Home Decor Items" },
   ],
 };
 
@@ -179,6 +200,9 @@ export const categoryOptionsMap = {
   kids: "Kids",
   accessories: "Accessories",
   footwear: "Footwear",
+  agriculture: "Agriculture",
+  healthcare: "Healthcare",
+  handcraft: "Handcraft",
 };
 
 export const brandOptionsMap = {
@@ -197,14 +221,36 @@ export const filterOptions = {
     { id: "kids", label: "Kids" },
     { id: "accessories", label: "Accessories" },
     { id: "footwear", label: "Footwear" },
+    { id: "agriculture", label: "Agriculture" },
+    { id: "healthcare", label: "Healthcare" },
+    { id: "handcraft", label: "Handcraft" },
   ],
   subcategory: [
+    // Existing subcategories
     { id: "clothes-men", label: "Men's Clothes" },
     { id: "clothes-women", label: "Women's Clothes" },
     { id: "clothes-kids", label: "Kids' Clothes" },
     { id: "electronics-mobiles", label: "Mobiles" },
     { id: "electronics-laptops", label: "Laptops" },
     { id: "electronics-accessories", label: "Electronics Accessories" },
+    
+    // Agriculture subcategories
+    { id: "agriculture-organic", label: "Organic Products" },
+    { id: "agriculture-seeds", label: "Seeds & Seedlings" },
+    { id: "agriculture-tools", label: "Farming Tools" },
+    { id: "agriculture-fertilizers", label: "Natural Fertilizers" },
+    
+    // Healthcare subcategories
+    { id: "healthcare-herbal", label: "Herbal Remedies" },
+    { id: "healthcare-wellness", label: "Wellness Products" },
+    { id: "healthcare-personal", label: "Personal Care" },
+    { id: "healthcare-hygiene", label: "Hygiene Products" },
+    
+    // Handcraft subcategories
+    { id: "handcraft-pottery", label: "Pottery & Ceramics" },
+    { id: "handcraft-textiles", label: "Handwoven Textiles" },
+    { id: "handcraft-jewelry", label: "Handmade Jewelry" },
+    { id: "handcraft-decor", label: "Home Decor Items" },
   ],
 };
 

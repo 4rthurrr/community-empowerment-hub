@@ -10,12 +10,27 @@ import {
   CloudLightning,
   Heater,
   Images,
+  Leaf,
+  Heart,
+  Paintbrush,
   Shirt,
   ShirtIcon,
   ShoppingBasket,
   UmbrellaIcon,
   WashingMachine,
   WatchIcon,
+  Wheat,
+  Flower,
+  Shovel,
+  Droplet,
+  Stethoscope,
+  Pill,
+  Sparkles,
+  BadgePlus,
+  PenTool,
+  Scissors,
+  Gem,
+  Home,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
@@ -37,6 +52,9 @@ const categoriesWithIcon = [
   { id: "clothing", label: "Clothing", icon: ShirtIcon },
   { id: "accessories", label: "Accessories", icon: WatchIcon },
   { id: "footwear", label: "Footwear", icon: UmbrellaIcon },
+  { id: "agriculture", label: "Agriculture", icon: Leaf },
+  { id: "healthcare", label: "Healthcare", icon: Heart },
+  { id: "handcraft", label: "Handcraft", icon: Paintbrush },
 ];
 
 const subcategoriesWithIcon = [
@@ -46,6 +64,18 @@ const subcategoriesWithIcon = [
   { id: "mens_clothing", label: "Men's Clothing", icon: ShirtIcon },
   { id: "womens_clothing", label: "Women's Clothing", icon: CloudLightning },
   { id: "kids_clothing", label: "Kids' Clothing", icon: BabyIcon },
+  { id: "agriculture-organic", label: "Organic Products", icon: Wheat },
+  { id: "agriculture-seeds", label: "Seeds & Seedlings", icon: Flower },
+  { id: "agriculture-tools", label: "Farming Tools", icon: Shovel },
+  { id: "agriculture-fertilizers", label: "Natural Fertilizers", icon: Droplet },
+  { id: "healthcare-herbal", label: "Herbal Remedies", icon: Stethoscope },
+  { id: "healthcare-wellness", label: "Wellness Products", icon: Pill },
+  { id: "healthcare-personal", label: "Personal Care", icon: Sparkles },
+  { id: "healthcare-hygiene", label: "Hygiene Products", icon: BadgePlus },
+  { id: "handcraft-pottery", label: "Pottery & Ceramics", icon: PenTool },
+  { id: "handcraft-textiles", label: "Handwoven Textiles", icon: Scissors },
+  { id: "handcraft-jewelry", label: "Handmade Jewelry", icon: Gem },
+  { id: "handcraft-decor", label: "Home Decor Items", icon: Home },
 ];
 
 const brandsWithIcon = [
@@ -78,7 +108,7 @@ function ShoppingHome() {
     };
 
     sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-    navigate(`/shop/listing`);
+    navigate(`/shop/listing?${section}=${getCurrentItem.id}`);
   }
 
   function handleGetProductDetails(getCurrentProductId) {
@@ -214,24 +244,50 @@ function ShoppingHome() {
         </div>
       </section>
 
-      <section className="py-12">
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Feature Products
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {productList && productList.length > 0
-              ? productList.map((productItem) => (
-                  <ShoppingProductTile
-                    handleGetProductDetails={handleGetProductDetails}
-                    product={productItem}
-                    handleAddtoCart={handleAddtoCart}
-                  />
-                ))
-              : null}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-3 relative inline-block">
+              <span className="relative z-10">Featured Products</span>
+              <span className="absolute bottom-0 left-0 w-full h-3 bg-blue-100 -z-10 transform -rotate-1"></span>
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Discover our handpicked selection of quality products from local artisans and community entrepreneurs</p>
           </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {productList && productList.length > 0
+              ? productList.slice(0, 8).map((productItem) => (
+                  <div key={productItem._id} className="transform transition duration-300 hover:scale-105">
+                    <ShoppingProductTile
+                      handleGetProductDetails={handleGetProductDetails}
+                      product={productItem}
+                      handleAddtoCart={handleAddtoCart}
+                    />
+                  </div>
+                ))
+              : (
+                <div className="col-span-full text-center py-12">
+                  <div className="inline-block p-6 bg-white rounded-lg shadow-sm">
+                    <p className="text-gray-500">No featured products available at the moment.</p>
+                  </div>
+                </div>
+              )}
+          </div>
+          
+          {productList && productList.length > 8 && (
+            <div className="text-center mt-12">
+              <Button 
+                onClick={() => navigate('/shop/listing')}
+                variant="outline" 
+                className="px-6 py-3 border-2 border-primary hover:bg-primary/10"
+              >
+                View All Products
+              </Button>
+            </div>
+          )}
         </div>
       </section>
+
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
