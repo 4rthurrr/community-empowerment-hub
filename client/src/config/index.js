@@ -57,17 +57,24 @@ export const addProductFormElements = [
     componentType: "input",
     type: "text",
     placeholder: "Enter product title",
+    required: true,
+    helpText: "A descriptive title helps customers find your product"
   },
   {
     label: "Description",
     name: "description",
     componentType: "textarea",
     placeholder: "Enter product description",
+    required: true,
+    helpText: "Describe your product in detail (at least 10 characters)"
   },
   {
     label: "Category",
     name: "category",
     componentType: "select",
+    required: true,
+    placeholder: "Select product category",
+    helpText: "Choose the primary category for your product",
     options: [
       { id: "men", label: "Men" },
       { id: "women", label: "Women" },
@@ -83,6 +90,9 @@ export const addProductFormElements = [
     label: "Subcategory",
     name: "subcategory",
     componentType: "select",
+    required: true,
+    placeholder: "Select product subcategory",
+    helpText: "Choose a specific subcategory for better classification",
     options: [], // This will be dynamically populated
   },
   {
@@ -90,21 +100,29 @@ export const addProductFormElements = [
     name: "price",
     componentType: "input",
     type: "number",
+    min: "0", // Enforce minimum value of 0
+    required: true,
     placeholder: "Enter product price",
+    helpText: "Must be a positive number (minimum $0)"
   },
   {
     label: "Sale Price",
     name: "salePrice",
     componentType: "input",
     type: "number",
+    min: "0", // Enforce minimum value of 0
     placeholder: "Enter sale price (optional)",
+    helpText: "If on sale, must be positive and less than regular price"
   },
   {
     label: "Total Stock",
     name: "totalStock",
     componentType: "input",
     type: "number",
+    min: "0", // Enforce minimum value of 0
+    required: true,
     placeholder: "Enter total stock",
+    helpText: "Number of items available for sale (minimum 0)"
   },
 ];
 

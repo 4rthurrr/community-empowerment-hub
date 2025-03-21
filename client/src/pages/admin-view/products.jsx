@@ -33,10 +33,22 @@ const initialFormData = {
   averageReview: 0,
 };
 
+const initialFormErrors = {
+  image: "",
+  title: "",
+  description: "",
+  category: "",
+  subcategory: "",
+  price: "",
+  salePrice: "",
+  totalStock: "",
+};
+
 function AdminProducts() {
   const [openCreateProductsDialog, setOpenCreateProductsDialog] =
     useState(false);
   const [formData, setFormData] = useState(initialFormData);
+  const [formErrors, setFormErrors] = useState(initialFormErrors);
   const [imageFile, setImageFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
@@ -51,9 +63,98 @@ function AdminProducts() {
   const totalProducts = productList?.length || 0;
   const outOfStock = productList?.filter(p => p.totalStock === 0)?.length || 0;
   const onSale = productList?.filter(p => p.salePrice > 0)?.length || 0;
+  
+  // Validate form function
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+    
+    // Image validation (required for new products)
+    if (!currentEditedId && !uploadedImageUrl) {
+      errors.image = "Product image is required";
+      isValid = false;
+    }
+    
+    // Title validation
+    if (!formData.title.trim()) {
+      errors.title = "Product title is required";
+      isValid = false;
+    } else if (formData.title.trim().length < 3) {
+      errors.title = "Title must be at least 3 characters";
+      isValid = false;
+    }
+    
+    // Description validation
+    if (!formData.description.trim()) {
+      errors.description = "Product description is required";
+      isValid = false;
+    } else if (formData.description.trim().length < 10) {
+      errors.description = "Description must be at least 10 characters";
+      isValid = false;
+    }
+    
+    // Category validation
+    if (!formData.category) {
+      errors.category = "Product category is required";
+      isValid = false;
+    }
+    
+    // Subcategory validation
+    if (!formData.subcategory && formData.category) {
+      errors.subcategory = "Product subcategory is required";
+      isValid = false;
+    }
+    
+    // Price validation
+    if (!formData.price) {
+      errors.price = "Product price is required";
+      isValid = false;
+    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+      errors.price = "Price must be a positive number";
+      isValid = false;
+    }
+    
+    // Sale price validation (if provided)
+    if (formData.salePrice) {
+      if (isNaN(Number(formData.salePrice))) {
+        errors.salePrice = "Sale price must be a number";
+        isValid = false;
+      } else if (Number(formData.salePrice) < 0) {
+        errors.salePrice = "Sale price cannot be negative";
+        isValid = false;
+      } else if (Number(formData.salePrice) >= Number(formData.price)) {
+        errors.salePrice = "Sale price must be less than regular price";
+        isValid = false;
+      }
+    }
+    
+    // Stock validation
+    if (!formData.totalStock) {
+      errors.totalStock = "Product stock is required";
+      isValid = false;
+    } else if (isNaN(Number(formData.totalStock))) {
+      errors.totalStock = "Stock must be a number";
+      isValid = false;
+    } else if (Number(formData.totalStock) < 0) {
+      errors.totalStock = "Stock cannot be negative";
+      isValid = false;
+    }
+    
+    setFormErrors(errors);
+    return isValid;
+  };
 
   function onSubmit(event) {
     event.preventDefault();
+    
+    // Validate the form before submission
+    if (!validateForm()) {
+      toast({
+        title: "Please fix the form errors",
+        variant: "destructive",
+      });
+      return;
+    }
 
     currentEditedId !== null
       ? dispatch(
@@ -62,15 +163,19 @@ function AdminProducts() {
             formData,
           })
         ).then((data) => {
-          console.log(data, "edit");
-
           if (data?.payload?.success) {
             dispatch(fetchAllProducts());
             setFormData(initialFormData);
+            setFormErrors(initialFormErrors);
             setOpenCreateProductsDialog(false);
             setCurrentEditedId(null);
             toast({
               title: "Product updated successfully",
+            });
+          } else {
+            toast({
+              title: "Failed to update product",
+              variant: "destructive",
             });
           }
         })
@@ -85,8 +190,14 @@ function AdminProducts() {
             setOpenCreateProductsDialog(false);
             setImageFile(null);
             setFormData(initialFormData);
+            setFormErrors(initialFormErrors);
             toast({
               title: "Product added successfully",
+            });
+          } else {
+            toast({
+              title: "Failed to add product",
+              variant: "destructive",
             });
           }
         });
@@ -99,13 +210,23 @@ function AdminProducts() {
         toast({
           title: "Product deleted successfully",
         });
+      } else {
+        toast({
+          title: "Failed to delete product",
+          variant: "destructive",
+        });
       }
     });
   }
 
   function isFormValid() {
+    // Check if there are validation errors
+    const hasErrors = Object.values(formErrors).some(error => error !== "");
+    if (hasErrors) return false;
+    
+    // Additional check for required fields
     return Object.keys(formData)
-      .filter((currentKey) => currentKey !== "averageReview")
+      .filter((currentKey) => currentKey !== "averageReview" && currentKey !== "salePrice")
       .map((key) => formData[key] !== "")
       .every((item) => item);
   }
@@ -119,6 +240,43 @@ function AdminProducts() {
       subcategory: "",
     });
     setSubcategoryOptions(subcategoryOptions);
+    
+    // Clear subcategory error when category changes
+    setFormErrors({
+      ...formErrors,
+      subcategory: "",
+    });
+  }
+  
+  // Function to reset form when dialog is closed
+  function handleCloseDialog() {
+    setOpenCreateProductsDialog(false);
+    setCurrentEditedId(null);
+    setFormData(initialFormData);
+    setFormErrors(initialFormErrors);
+    setImageFile(null);
+  }
+  
+  // Function for handling form field changes
+  function handleFormChange(name, value) {
+    // For number fields, ensure no negative values
+    if ((name === 'price' || name === 'salePrice' || name === 'totalStock') && value < 0) {
+      value = 0;
+    }
+    
+    // Update form data
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+    
+    // Clear specific field error when user edits the field
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: "",
+      });
+    }
   }
 
   useEffect(() => {
@@ -131,6 +289,13 @@ function AdminProducts() {
       setSubcategoryOptions(subcategoryOptions);
     }
   }, [formData.category]);
+  
+  // When editing a product, pre-validate the form
+  useEffect(() => {
+    if (currentEditedId) {
+      validateForm();
+    }
+  }, [currentEditedId, formData]);
 
   return (
     <Fragment>
@@ -200,11 +365,7 @@ function AdminProducts() {
       {/* Add/Edit Product Sheet */}
       <Sheet
         open={openCreateProductsDialog}
-        onOpenChange={() => {
-          setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
-          setFormData(initialFormData);
-        }}
+        onOpenChange={handleCloseDialog}
       >
         <SheetContent side="right" className="overflow-auto w-full max-w-md sm:max-w-lg">
           <SheetHeader>
@@ -222,10 +383,22 @@ function AdminProducts() {
               imageLoadingState={imageLoadingState}
               isEditMode={currentEditedId !== null}
             />
+            {formErrors.image && (
+              <p className="text-sm text-red-500 mt-1 mb-3">{formErrors.image}</p>
+            )}
             <CommonForm
               onSubmit={onSubmit}
               formData={formData}
-              setFormData={setFormData}
+              setFormData={(data) => {
+                // For tracking individual field changes
+                const changedField = Object.keys(data).find(key => data[key] !== formData[key]);
+                if (changedField) {
+                  handleFormChange(changedField, data[changedField]);
+                } else {
+                  setFormData(data);
+                }
+              }}
+              formErrors={formErrors}
               buttonText={currentEditedId !== null ? "Update Product" : "Create Product"}
               formControls={addProductFormElements.map((element) => {
                 if (element.name === "subcategory") {
@@ -242,7 +415,7 @@ function AdminProducts() {
                 }
                 return element;
               })}
-              isBtnDisabled={!isFormValid()}
+              isBtnDisabled={!isFormValid() || imageLoadingState || (!currentEditedId && !uploadedImageUrl)}
             />
           </div>
         </SheetContent>
