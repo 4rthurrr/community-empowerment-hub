@@ -57,17 +57,20 @@ export const addProductFormElements = [
     componentType: "input",
     type: "text",
     placeholder: "Enter product title",
+    required: true
   },
   {
     label: "Description",
     name: "description",
     componentType: "textarea",
     placeholder: "Enter product description",
+    required: true
   },
   {
     label: "Category",
     name: "category",
     componentType: "select",
+    required: true,
     options: [
       { id: "men", label: "Men" },
       { id: "women", label: "Women" },
@@ -83,6 +86,7 @@ export const addProductFormElements = [
     label: "Subcategory",
     name: "subcategory",
     componentType: "select",
+    required: true,
     options: [], // This will be dynamically populated
   },
   {
@@ -91,6 +95,7 @@ export const addProductFormElements = [
     componentType: "input",
     type: "number",
     placeholder: "Enter product price",
+    required: true
   },
   {
     label: "Sale Price",
@@ -105,6 +110,7 @@ export const addProductFormElements = [
     componentType: "input",
     type: "number",
     placeholder: "Enter total stock",
+    required: true
   },
 ];
 

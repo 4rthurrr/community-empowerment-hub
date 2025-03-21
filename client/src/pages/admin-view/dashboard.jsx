@@ -46,11 +46,12 @@ function AdminDashboard() {
       </Button>
       <div className="flex flex-col gap-4 mt-5">
         {featureImageList && featureImageList.length > 0
-          ? featureImageList.map((featureImgItem) => (
-              <div className="relative">
+          ? featureImageList.map((featureImgItem, index) => (
+              <div className="relative" key={featureImgItem._id || featureImgItem.id || index}>
                 <img
                   src={featureImgItem.image}
                   className="w-full h-[300px] object-cover rounded-t-lg"
+                  alt="Featured image"
                 />
               </div>
             ))
