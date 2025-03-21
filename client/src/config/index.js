@@ -69,8 +69,11 @@ export const addProductFormElements = [
     name: "category",
     componentType: "select",
     options: [
-      { id: "clothes", label: "Clothes" },
-      { id: "electronics", label: "Electronics" },
+      { id: "men", label: "Men" },
+      { id: "women", label: "Women" },
+      { id: "kids", label: "Kids" },
+      { id: "accessories", label: "Accessories" },
+      { id: "footwear", label: "Footwear" },
       { id: "agriculture", label: "Agriculture" },
       { id: "healthcare", label: "Healthcare" },
       { id: "handcraft", label: "Handcraft" },
@@ -106,9 +109,13 @@ export const addProductFormElements = [
 ];
 
 export const subcategoryOptionsMap = {
-  clothes: [
+  men: [
     { id: "clothes-men", label: "Men's Clothes" },
+  ],
+  women: [
     { id: "clothes-women", label: "Women's Clothes" },
+  ],
+  kids: [
     { id: "clothes-kids", label: "Kids' Clothes" },
   ],
   electronics: [
@@ -133,6 +140,14 @@ export const subcategoryOptionsMap = {
     { id: "handcraft-textiles", label: "Handwoven Textiles" },
     { id: "handcraft-jewelry", label: "Handmade Jewelry" },
     { id: "handcraft-decor", label: "Home Decor Items" },
+  ],
+  accessories: [
+    { id: "accessories-watches", label: "Watches" },
+    { id: "accessories-bags", label: "Bags" },
+  ],
+  footwear: [
+    { id: "footwear-casual", label: "Casual Shoes" },
+    { id: "footwear-formal", label: "Formal Shoes" },
   ],
 };
 
