@@ -200,23 +200,31 @@ function ShoppingHome() {
           <ChevronRightIcon className="w-4 h-4" />
         </Button>
       </div>
+      
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
-            Shop by Category
+            Browse Categories
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categoriesWithIcon.map((categoryItem) => (
               <Card
                 key={categoryItem.id}
                 onClick={() =>
                   handleNavigateToListingPage(categoryItem, "category")
                 }
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-primary hover:translate-y-[-5px]"
               >
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <categoryItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{categoryItem.label}</span>
+                <CardContent className="flex items-center p-6">
+                  <div className="rounded-full bg-primary/10 p-3 mr-4">
+                    <categoryItem.icon className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{categoryItem.label}</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Browse {categoryItem.label.toLowerCase()} products
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -224,19 +232,30 @@ function ShoppingHome() {
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by Subcategory</h2>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">Specialized Categories</h2>
+            <Button 
+              variant="ghost" 
+              className="text-primary"
+              onClick={() => navigate('/shop/listing')}
+            >
+              View All
+            </Button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {subcategoriesWithIcon.map((subcategoryItem) => (
+            {subcategoriesWithIcon.slice(0, 12).map((subcategoryItem) => (
               <Card
                 key={subcategoryItem.id}
                 onClick={() => handleNavigateToListingPage(subcategoryItem, "subcategory")}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer group hover:bg-primary/5 transition-all border border-gray-100"
               >
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <subcategoryItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{subcategoryItem.label}</span>
+                <CardContent className="flex flex-col items-center justify-center p-4 text-center">
+                  <div className="rounded-full bg-gray-100 p-3 mb-3 group-hover:bg-white transition-colors">
+                    <subcategoryItem.icon className="w-6 h-6 text-gray-700 group-hover:text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">{subcategoryItem.label}</span>
                 </CardContent>
               </Card>
             ))}
