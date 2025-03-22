@@ -251,8 +251,8 @@ function AdminReports() {
           head: [['Total Orders', 'Total Sales', 'Average Order Value']],
           body: [[
             summaryData.totalOrders,
-            `$${summaryData.totalSales.toFixed(2)}`,
-            `$${summaryData.averageOrderValue.toFixed(2)}`
+            `LKR ${summaryData.totalSales.toFixed(2)}`,
+            `LKR ${summaryData.averageOrderValue.toFixed(2)}`
           ]],
           theme: 'grid',
           headStyles: { fillColor: [66, 139, 202] }
@@ -263,7 +263,7 @@ function AdminReports() {
           head: [['Total Products', 'Total Revenue', 'Items Sold', 'Total Inventory']],
           body: [[
             productList?.length || 0,
-            `$${summaryData.totalRevenue?.toFixed(2) || '0.00'}`,
+            `LKR ${summaryData.totalRevenue?.toFixed(2) || '0.00'}`,
             summaryData.totalSoldItems || 0,
             summaryData.totalInventory || 0
           ]],
@@ -285,7 +285,7 @@ function AdminReports() {
           order.status,
           order.paymentStatus,
           order.items,
-          `$${order.amount.toFixed(2)}`
+          `LKR ${order.amount.toFixed(2)}`
         ]);
         
         doc.autoTable({
@@ -301,10 +301,10 @@ function AdminReports() {
         const productRows = reportData.map(product => [
           product.title,
           product.category,
-          `$${product.price.toFixed(2)}`,
+          `LKR ${product.price.toFixed(2)}`,
           product.inStock,
           product.quantitySold,
-          `$${product.revenue.toFixed(2)}`
+          `LKR ${product.revenue.toFixed(2)}`
         ]);
         
         doc.autoTable({
@@ -324,7 +324,7 @@ function AdminReports() {
       const topProductsRows = summaryData.topSellingProducts.map(product => [
         product.title,
         product.quantity,
-        `$${product.revenue.toFixed(2)}`
+        `LKR ${product.revenue.toFixed(2)}`
       ]);
       
       doc.autoTable({
@@ -427,7 +427,7 @@ function AdminReports() {
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${summaryData.totalSales.toFixed(2)}</div>
+                <div className="text-2xl font-bold">LKR {summaryData.totalSales.toFixed(2)}</div>
               </CardContent>
             </Card>
             <Card>
@@ -436,7 +436,7 @@ function AdminReports() {
                 <BarChart4 className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${summaryData.averageOrderValue.toFixed(2)}</div>
+                <div className="text-2xl font-bold">LKR {summaryData.averageOrderValue.toFixed(2)}</div>
               </CardContent>
             </Card>
             <Card>
@@ -470,7 +470,7 @@ function AdminReports() {
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${summaryData.totalRevenue?.toFixed(2) || '0.00'}</div>
+                <div className="text-2xl font-bold">LKR {summaryData.totalRevenue?.toFixed(2) || '0.00'}</div>
               </CardContent>
             </Card>
             <Card>
@@ -536,7 +536,7 @@ function AdminReports() {
                         </span>
                       </TableCell>
                       <TableCell>{order.items}</TableCell>
-                      <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">LKR {order.amount.toFixed(2)}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -566,7 +566,7 @@ function AdminReports() {
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.title}</TableCell>
                       <TableCell>{product.category}</TableCell>
-                      <TableCell>${product.price.toFixed(2)}</TableCell>
+                      <TableCell>LKR {product.price.toFixed(2)}</TableCell>
                       <TableCell>
                         {product.inStock <= 0 ? (
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -581,7 +581,7 @@ function AdminReports() {
                         )}
                       </TableCell>
                       <TableCell>{product.quantitySold}</TableCell>
-                      <TableCell className="text-right">${product.revenue.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">LKR {product.revenue.toFixed(2)}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -617,7 +617,7 @@ function AdminReports() {
                   <TableRow key={index}>
                     <TableCell className="font-medium">{product.title}</TableCell>
                     <TableCell>{product.quantity}</TableCell>
-                    <TableCell className="text-right">${product.revenue.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">LKR {product.revenue.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (

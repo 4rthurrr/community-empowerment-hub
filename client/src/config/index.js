@@ -96,22 +96,22 @@ export const addProductFormElements = [
     options: [], // This will be dynamically populated
   },
   {
-    label: "Price",
+    label: "Price (LKR)",
     name: "price",
     componentType: "input",
     type: "number",
     min: "0", // Enforce minimum value of 0
     required: true,
-    placeholder: "Enter product price",
-    helpText: "Must be a positive number (minimum $0)"
+    placeholder: "Enter product price in LKR",
+    helpText: "Must be a positive number (minimum LKR 0)"
   },
   {
-    label: "Sale Price",
+    label: "Sale Price (LKR)",
     name: "salePrice",
     componentType: "input",
     type: "number",
     min: "0", // Enforce minimum value of 0
-    placeholder: "Enter sale price (optional)",
+    placeholder: "Enter sale price in LKR (optional)",
     helpText: "If on sale, must be positive and less than regular price"
   },
   {
