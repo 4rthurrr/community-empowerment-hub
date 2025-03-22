@@ -249,30 +249,59 @@ const JobPortal = () => {
   const validateForm = () => {
     const errors = {};
     
+    // Job Title validation
     if (!formData.jobTitle.trim()) {
       errors.jobTitle = 'Job title is required';
+    } else if (formData.jobTitle.trim().length < 3) {
+      errors.jobTitle = 'Job title must be at least 3 characters';
+    } else if (formData.jobTitle.trim().length > 100) {
+      errors.jobTitle = 'Job title must be less than 100 characters';
     }
     
+    // Organization Name validation
     if (!formData.companyName.trim()) {
       errors.companyName = 'Organization name is required';
+    } else if (formData.companyName.trim().length < 3) {
+      errors.companyName = 'Organization name must be at least 3 characters';
+    } else if (formData.companyName.trim().length > 100) {
+      errors.companyName = 'Organization name must be less than 100 characters';
     }
     
+    // Location validation
     if (!formData.location.trim()) {
       errors.location = 'Location is required';
+    } else if (formData.location.trim().length < 2) {
+      errors.location = 'Location must be at least 2 characters';
+    } else if (formData.location.trim().length > 50) {
+      errors.location = 'Location must be less than 50 characters';
     }
     
-    if (formData.salary && isNaN(Number(formData.salary))) {
-      errors.salary = 'Salary must be a number';
+    // Salary validation - must be positive number or empty
+    if (formData.salary !== '') {
+      const salaryNum = Number(formData.salary);
+      if (isNaN(salaryNum)) {
+        errors.salary = 'Salary must be a valid number';
+      } else if (salaryNum <= 0) {
+        errors.salary = 'Salary must be greater than zero';
+      } else if (salaryNum > 1000000) {
+        errors.salary = 'Salary value is too high';
+      } else if (!Number.isInteger(salaryNum)) {
+        errors.salary = 'Salary must be a whole number';
+      }
     }
     
+    // Job Description validation
     if (!formData.jobDescription.trim()) {
       errors.jobDescription = 'Job description is required';
     } else if (formData.jobDescription.trim().length < 50) {
-      errors.jobDescription = 'Job description must be at least 50 characters';
+      errors.jobDescription = `Job description must be at least 50 characters (currently ${formData.jobDescription.trim().length})`;
+    } else if (formData.jobDescription.trim().length > 1000) {
+      errors.jobDescription = 'Job description must be less than 1000 characters';
     }
     
+    // Category validation
     if (!formData.category) {
-      errors.category = 'Category is required';
+      errors.category = 'Please select a job category';
     }
     
     return errors;
@@ -549,28 +578,61 @@ const JobPortal = () => {
   const validateApplicationForm = () => {
     const errors = {};
     
+    // Name validation
     if (!applicationFormData.name.trim()) {
-      errors.name = 'Name is required';
+      errors.name = 'Full name is required';
+    } else if (applicationFormData.name.trim().length < 3) {
+      errors.name = 'Name must be at least 3 characters';
+    } else if (applicationFormData.name.trim().length > 100) {
+      errors.name = 'Name must be less than 100 characters';
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(applicationFormData.name.trim())) {
+      errors.name = 'Name contains invalid characters';
     }
     
+    // Email validation with better regex
     if (!applicationFormData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(applicationFormData.email)) {
-      errors.email = 'Email is invalid';
+      errors.email = 'Email address is required';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(applicationFormData.email.trim())) {
+      errors.email = 'Please enter a valid email address';
     }
     
+    // Phone validation with Sri Lankan format
     if (!applicationFormData.phone.trim()) {
       errors.phone = 'Phone number is required';
+    } else if (!/^0[0-9]{9}$|^\+94[0-9]{9}$|^07[0-9]-[0-9]{3}-[0-9]{4}$/.test(
+      applicationFormData.phone.trim().replace(/\s/g, '')
+    )) {
+      errors.phone = 'Please enter a valid Sri Lankan phone number (e.g., 07X-XXX-XXXX or 07XXXXXXXX)';
     }
     
+    // Experience validation
     if (!applicationFormData.experience.trim()) {
       errors.experience = 'Experience information is required';
+    } else if (applicationFormData.experience.trim().length < 20) {
+      errors.experience = `Experience details must be at least 20 characters (currently ${applicationFormData.experience.trim().length})`;
+    } else if (applicationFormData.experience.trim().length > 500) {
+      errors.experience = 'Experience details must be less than 500 characters';
     }
     
+    // Cover letter validation
     if (!applicationFormData.coverLetter.trim()) {
       errors.coverLetter = 'Cover letter is required';
     } else if (applicationFormData.coverLetter.trim().length < 50) {
-      errors.coverLetter = 'Cover letter must be at least 50 characters';
+      errors.coverLetter = `Cover letter must be at least 50 characters (currently ${applicationFormData.coverLetter.trim().length})`;
+    } else if (applicationFormData.coverLetter.trim().length > 1000) {
+      errors.coverLetter = 'Cover letter must be less than 1000 characters';
+    }
+    
+    // Resume file validation
+    if (applicationFormData.resume) {
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!allowedTypes.includes(applicationFormData.resume.type)) {
+        errors.resume = 'Resume must be in PDF, DOC, or DOCX format';
+      } else if (applicationFormData.resume.size > maxSize) {
+        errors.resume = 'Resume file size must be less than 5MB';
+      }
     }
     
     return errors;
@@ -1029,9 +1091,23 @@ const JobPortal = () => {
             </div>
             
             <div className="p-6">
+              {/* Error summary */}
+              {Object.keys(formErrors).length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="font-semibold text-red-700 mb-2">Please fix the following errors:</p>
+                  <ul className="list-disc list-inside text-sm text-red-700">
+                    {Object.values(formErrors).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Job Title *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Job Title <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="jobTitle"
@@ -1039,12 +1115,20 @@ const JobPortal = () => {
                     onChange={handleChange}
                     className={`w-full p-3 border rounded-md ${formErrors.jobTitle ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="e.g. Handcraft Artisan, Carpenter, Electrician"
+                    maxLength={100}
                   />
-                  {formErrors.jobTitle && <div className="text-red-500 text-sm mt-1">{formErrors.jobTitle}</div>}
+                  <div className="flex justify-between mt-1">
+                    {formErrors.jobTitle && <div className="text-red-500 text-sm">{formErrors.jobTitle}</div>}
+                    <div className="text-xs text-gray-500 ml-auto">
+                      {formData.jobTitle.length}/100
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Organization Name *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Organization Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="companyName"
@@ -1052,12 +1136,20 @@ const JobPortal = () => {
                     onChange={handleChange}
                     className={`w-full p-3 border rounded-md ${formErrors.companyName ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="e.g. Artisan Collective, Community Development Trust"
+                    maxLength={100}
                   />
-                  {formErrors.companyName && <div className="text-red-500 text-sm mt-1">{formErrors.companyName}</div>}
+                  <div className="flex justify-between mt-1">
+                    {formErrors.companyName && <div className="text-red-500 text-sm">{formErrors.companyName}</div>}
+                    <div className="text-xs text-gray-500 ml-auto">
+                      {formData.companyName.length}/100
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Location *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Location <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="location"
@@ -1065,25 +1157,40 @@ const JobPortal = () => {
                     onChange={handleChange}
                     className={`w-full p-3 border rounded-md ${formErrors.location ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="e.g. Colombo, Kandy, Jaffna"
+                    maxLength={50}
                   />
-                  {formErrors.location && <div className="text-red-500 text-sm mt-1">{formErrors.location}</div>}
+                  <div className="flex justify-between mt-1">
+                    {formErrors.location && <div className="text-red-500 text-sm">{formErrors.location}</div>}
+                    <div className="text-xs text-gray-500 ml-auto">
+                      {formData.location.length}/50
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Monthly Salary (Rs.) (optional)</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Monthly Salary (Rs.) <span className="text-gray-500 font-normal">(optional)</span>
+                  </label>
                   <input
-                    type="text"
+                    type="number"
                     name="salary"
                     value={formData.salary}
                     onChange={handleChange}
                     className={`w-full p-3 border rounded-md ${formErrors.salary ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="e.g. 35000"
+                    min="0"
+                    step="1"
                   />
                   {formErrors.salary && <div className="text-red-500 text-sm mt-1">{formErrors.salary}</div>}
+                  <div className="text-xs text-gray-500 mt-1">
+                    Enter whole number without commas or decimals
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Job Description *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Job Description <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     name="jobDescription"
                     value={formData.jobDescription}
@@ -1091,12 +1198,20 @@ const JobPortal = () => {
                     className={`w-full p-3 border rounded-md ${formErrors.jobDescription ? 'border-red-500' : 'border-gray-300'}`}
                     rows="4"
                     placeholder="Describe the job responsibilities, skills required, and qualifications (minimum 50 characters)"
+                    maxLength={1000}
                   />
-                  {formErrors.jobDescription && <div className="text-red-500 text-sm mt-1">{formErrors.jobDescription}</div>}
+                  <div className="flex justify-between mt-1">
+                    {formErrors.jobDescription && <div className="text-red-500 text-sm">{formErrors.jobDescription}</div>}
+                    <div className={`text-xs ${formData.jobDescription.length < 50 ? 'text-amber-500' : 'text-gray-500'} ml-auto`}>
+                      {formData.jobDescription.length}/1000 (min 50)
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-6">
-                  <label className="block font-semibold mb-2 text-gray-700">Category *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Category <span className="text-red-500">*</span>
+                  </label>
                   <select
                     name="category"
                     value={formData.category}
@@ -1163,10 +1278,24 @@ const JobPortal = () => {
                   <div className="text-sm text-gray-600">Salary: Rs. {currentJobToApply.salary.toLocaleString()}</div>
                 )}
               </div>
+
+              {/* Error summary */}
+              {Object.keys(applicationFormErrors).length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="font-semibold text-red-700 mb-2">Please fix the following errors:</p>
+                  <ul className="list-disc list-inside text-sm text-red-700">
+                    {Object.values(applicationFormErrors).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               
               <form onSubmit={handleApplicationSubmit}>
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Full Name *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="name"
@@ -1174,13 +1303,21 @@ const JobPortal = () => {
                     onChange={handleApplicationChange}
                     className={`w-full p-3 border rounded-md ${applicationFormErrors.name ? 'border-red-500' : 'border-gray-300'}`}
                     placeholder="Your full name"
+                    maxLength={100}
                   />
-                  {applicationFormErrors.name && <div className="text-red-500 text-sm mt-1">{applicationFormErrors.name}</div>}
+                  <div className="flex justify-between mt-1">
+                    {applicationFormErrors.name && <div className="text-red-500 text-sm">{applicationFormErrors.name}</div>}
+                    <div className="text-xs text-gray-500 ml-auto">
+                      {applicationFormData.name.length}/100
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block font-semibold mb-2 text-gray-700">Email *</label>
+                    <label className="block font-semibold mb-2 text-gray-700">
+                      Email <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="email"
                       name="email"
@@ -1193,7 +1330,9 @@ const JobPortal = () => {
                   </div>
                   
                   <div>
-                    <label className="block font-semibold mb-2 text-gray-700">Phone Number *</label>
+                    <label className="block font-semibold mb-2 text-gray-700">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       name="phone"
@@ -1207,33 +1346,51 @@ const JobPortal = () => {
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Relevant Experience *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Relevant Experience <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     name="experience"
                     value={applicationFormData.experience}
                     onChange={handleApplicationChange}
                     className={`w-full p-3 border rounded-md ${applicationFormErrors.experience ? 'border-red-500' : 'border-gray-300'}`}
                     rows="3"
-                    placeholder="Briefly describe your relevant skills and experience"
+                    placeholder="Briefly describe your relevant skills and experience (min 20 characters)"
+                    maxLength={500}
                   />
-                  {applicationFormErrors.experience && <div className="text-red-500 text-sm mt-1">{applicationFormErrors.experience}</div>}
+                  <div className="flex justify-between mt-1">
+                    {applicationFormErrors.experience && <div className="text-red-500 text-sm">{applicationFormErrors.experience}</div>}
+                    <div className={`text-xs ${applicationFormData.experience.length < 20 ? 'text-amber-500' : 'text-gray-500'} ml-auto`}>
+                      {applicationFormData.experience.length}/500 (min 20)
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block font-semibold mb-2 text-gray-700">Cover Letter *</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Cover Letter <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     name="coverLetter"
                     value={applicationFormData.coverLetter}
                     onChange={handleApplicationChange}
                     className={`w-full p-3 border rounded-md ${applicationFormErrors.coverLetter ? 'border-red-500' : 'border-gray-300'}`}
                     rows="5"
-                    placeholder="Explain why you're interested in this position and how your skills match the requirements"
+                    placeholder="Explain why you're interested in this position and how your skills match the requirements (min 50 characters)"
+                    maxLength={1000}
                   />
-                  {applicationFormErrors.coverLetter && <div className="text-red-500 text-sm mt-1">{applicationFormErrors.coverLetter}</div>}
+                  <div className="flex justify-between mt-1">
+                    {applicationFormErrors.coverLetter && <div className="text-red-500 text-sm">{applicationFormErrors.coverLetter}</div>}
+                    <div className={`text-xs ${applicationFormData.coverLetter.length < 50 ? 'text-amber-500' : 'text-gray-500'} ml-auto`}>
+                      {applicationFormData.coverLetter.length}/1000 (min 50)
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mb-6">
-                  <label className="block font-semibold mb-2 text-gray-700">Resume (optional)</label>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Resume <span className="text-gray-500 font-normal">(optional)</span>
+                  </label>
                   <div className="flex items-center">
                     <input
                       type="file"
@@ -1245,7 +1402,7 @@ const JobPortal = () => {
                     />
                     <label 
                       htmlFor="resume-upload"
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors"
+                      className={`px-4 py-2 ${applicationFormErrors.resume ? 'bg-red-100 text-red-800' : 'bg-gray-200 text-gray-700'} rounded-md cursor-pointer hover:bg-gray-300 transition-colors`}
                     >
                       Select File
                     </label>
@@ -1253,9 +1410,13 @@ const JobPortal = () => {
                       {applicationFormData.resume ? applicationFormData.resume.name : "No file selected"}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Accepted formats: PDF, DOC, DOCX (Max size: 5MB)
-                  </div>
+                  {applicationFormErrors.resume ? (
+                    <div className="text-red-500 text-sm mt-1">{applicationFormErrors.resume}</div>
+                  ) : (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Accepted formats: PDF, DOC, DOCX (Max size: 5MB)
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end gap-3 pt-4 border-t">
