@@ -58,11 +58,11 @@ function AdminProductTile({
             <div>
               {product?.salePrice > 0 ? (
                 <div className="flex flex-col">
-                  <span className="line-through text-gray-500 text-sm">${product?.price}</span>
-                  <span className="text-lg font-bold text-primary">${product?.salePrice}</span>
+                  <span className="line-through text-gray-500 text-sm">LKR {product?.price}</span>
+                  <span className="text-lg font-bold text-primary">LKR {product?.salePrice}</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-primary">${product?.price}</span>
+                <span className="text-lg font-bold text-primary">LKR {product?.price}</span>
               )}
             </div>
             <div className="text-sm text-gray-500">

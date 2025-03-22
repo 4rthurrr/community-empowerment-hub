@@ -110,14 +110,14 @@ function AdminProducts() {
       errors.price = "Product price is required";
       isValid = false;
     } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      errors.price = "Price must be a positive number";
+      errors.price = "Price must be a positive number in LKR";
       isValid = false;
     }
     
     // Sale price validation (if provided)
     if (formData.salePrice) {
       if (isNaN(Number(formData.salePrice))) {
-        errors.salePrice = "Sale price must be a number";
+        errors.salePrice = "Sale price must be a number in LKR";
         isValid = false;
       } else if (Number(formData.salePrice) < 0) {
         errors.salePrice = "Sale price cannot be negative";

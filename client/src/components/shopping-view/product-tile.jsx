@@ -66,10 +66,10 @@ function ShoppingProductTile({
             {product?.salePrice > 0 ? (
               <>
                 <span className="text-lg font-bold text-primary">
-                  ${product?.salePrice}
+                  LKR {product?.salePrice}
                 </span>
                 <span className="text-sm font-medium text-gray-500 line-through">
-                  ${product?.price}
+                  LKR {product?.price}
                 </span>
                 <span className="text-xs font-medium text-emerald-600 ml-auto">
                   {Math.round(((product?.price - product?.salePrice) / product?.price) * 100)}% off
@@ -77,7 +77,7 @@ function ShoppingProductTile({
               </>
             ) : (
               <span className="text-lg font-bold text-primary">
-                ${product?.price}
+                LKR {product?.price}
               </span>
             )}
           </div>

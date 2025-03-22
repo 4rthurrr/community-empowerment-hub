@@ -108,7 +108,7 @@ function AdminOrderDetailsView({ orderDetails }) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total</p>
-                <p className="font-medium text-lg">${orderDetails?.totalAmount?.toFixed(2)}</p>
+                <p className="font-medium text-lg">LKR {orderDetails?.totalAmount?.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -143,7 +143,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                           </div>
                         </div>
                         <div className="font-medium">
-                          ${(item.quantity * parseFloat(item.price)).toFixed(2)}
+                          LKR {(item.quantity * parseFloat(item.price)).toFixed(2)}
                         </div>
                       </div>
                     ))
@@ -199,7 +199,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                   <Separator className="my-2" />
                   <div className="flex justify-between text-lg font-medium">
                     <span>Total:</span>
-                    <span>${orderDetails?.totalAmount?.toFixed(2)}</span>
+                    <span>LKR {orderDetails?.totalAmount?.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
