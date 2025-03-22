@@ -223,6 +223,8 @@ const SellerPortfolio = () => {
       errors.name = "Product name is required";
     } else if (currentProduct.name.trim().length < 3) {
       errors.name = "Product name must be at least 3 characters";
+    } else if (!/^[A-Za-z\s'-]+$/.test(currentProduct.name.trim())) {
+      errors.name = "Name cannot contain numbers or symbols";
     }
 
     // Category validation
@@ -233,15 +235,18 @@ const SellerPortfolio = () => {
     // Craft Type validation
     if (!currentProduct?.craftType?.trim()) {
       errors.craftType = "Craft type is required";
+    } else if (!/^[A-Za-z\s'-]+$/.test(currentProduct.craftType.trim())) {
+      errors.craftType = "Craft type cannot contain numbers or symbols";
     }
+    
 
     // Price validation
     if (!currentProduct?.price) {
       errors.price = "Price is required";
-    } else if (currentProduct.price <= 0) {
-      errors.price = "Price must be greater than zero";
-    } else if (isNaN(currentProduct.price)) {
+    } else if (isNaN(Number(currentProduct.price))) {
       errors.price = "Price must be a valid number";
+    } else if (Number(currentProduct.price) <= 0) {
+      errors.price = "Price must be a positive number";
     }
 
     // Description validation
