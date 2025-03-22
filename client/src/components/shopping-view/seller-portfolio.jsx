@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -181,6 +181,13 @@ const SellerPortfolio = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("topRated");
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset form errors when the dialog opens/closes or product changes
+  useEffect(() => {
+    setFormErrors({});
+  }, [isDialogOpen, currentProduct]);
 
   // Handle adding a new product
   const handleAddProduct = () => {
@@ -207,9 +214,99 @@ const SellerPortfolio = () => {
     setIsDialogOpen(true);
   };
 
-  // Handle saving product (new or edited)
+  // Validate the product form
+  const validateProductForm = () => {
+    const errors = {};
+
+    // Name validation
+    if (!currentProduct?.name?.trim()) {
+      errors.name = "Product name is required";
+    } else if (currentProduct.name.trim().length < 3) {
+      errors.name = "Product name must be at least 3 characters";
+    }
+
+    // Category validation
+    if (!currentProduct?.category) {
+      errors.category = "Please select a category";
+    }
+
+    // Craft Type validation
+    if (!currentProduct?.craftType?.trim()) {
+      errors.craftType = "Craft type is required";
+    }
+
+    // Price validation
+    if (!currentProduct?.price) {
+      errors.price = "Price is required";
+    } else if (currentProduct.price <= 0) {
+      errors.price = "Price must be greater than zero";
+    } else if (isNaN(currentProduct.price)) {
+      errors.price = "Price must be a valid number";
+    }
+
+    // Description validation
+    if (!currentProduct?.description?.trim()) {
+      errors.description = "Description is required";
+    } else if (currentProduct.description.trim().length < 20) {
+      errors.description = "Description should be at least 20 characters";
+    }
+
+    // Image URL validation
+    if (!currentProduct?.image?.trim()) {
+      errors.image = "Image URL is required";
+    } else {
+      try {
+        new URL(currentProduct.image);
+      } catch (e) {
+        errors.image = "Please enter a valid URL";
+      }
+    }
+
+    // Materials validation
+    if (!currentProduct?.materials?.length || 
+        (currentProduct.materials.length === 1 && currentProduct.materials[0] === "")) {
+      errors.materials = "Add at least one material";
+    }
+
+    // Rating validation
+    if (currentProduct?.rating !== 0 && !currentProduct?.rating) {
+      errors.rating = "Rating is required";
+    } else if (currentProduct.rating < 0 || currentProduct.rating > 5) {
+      errors.rating = "Rating must be between 0 and 5";
+    }
+
+    // Reviews validation
+    if (currentProduct?.reviews !== 0 && !currentProduct?.reviews) {
+      errors.reviews = "Number of reviews is required";
+    } else if (currentProduct.reviews < 0 || !Number.isInteger(Number(currentProduct.reviews))) {
+      errors.reviews = "Reviews must be a non-negative whole number";
+    }
+
+    // Units Sold validation
+    if (currentProduct?.sold !== 0 && !currentProduct?.sold) {
+      errors.sold = "Units sold is required";
+    } else if (currentProduct.sold < 0 || !Number.isInteger(Number(currentProduct.sold))) {
+      errors.sold = "Units sold must be a non-negative whole number";
+    }
+
+    return errors;
+  };
+
+  // Handle saving product with validation
   const handleSaveProduct = () => {
     if (!currentProduct) return;
+    
+    setIsSubmitting(true);
+    
+    // Validate the form
+    const validationErrors = validateProductForm();
+    setFormErrors(validationErrors);
+    
+    // If there are errors, don't proceed
+    if (Object.keys(validationErrors).length > 0) {
+      setIsSubmitting(false);
+      return;
+    }
     
     // For demo purposes, we'll just add it to the top of the active category
     const newData = {...portfolioData};
@@ -224,6 +321,7 @@ const SellerPortfolio = () => {
     
     setPortfolioData(newData);
     setIsDialogOpen(false);
+    setIsSubmitting(false);
   };
 
   // Handle deleting a product
@@ -401,96 +499,143 @@ const SellerPortfolio = () => {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Name
+                Name *
               </Label>
-              <Input
-                id="name"
-                value={currentProduct?.name || ''}
-                onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})}
-                className="col-span-3"
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="name"
+                  value={currentProduct?.name || ''}
+                  onChange={(e) => setCurrentProduct({...currentProduct, name: e.target.value})}
+                  className={formErrors.name ? "border-red-500" : ""}
+                />
+                {formErrors.name && (
+                  <p className="text-xs text-red-500">{formErrors.name}</p>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="category" className="text-right">
-                Category
+                Category *
               </Label>
-              <Select 
-                value={currentProduct?.category || ''}
-                onValueChange={(value) => setCurrentProduct({...currentProduct, category: value})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pottery">Pottery</SelectItem>
-                  <SelectItem value="Textiles">Textiles</SelectItem>
-                  <SelectItem value="Woodwork">Woodwork</SelectItem>
-                  <SelectItem value="Art">Art</SelectItem>
-                  <SelectItem value="Culinary">Culinary</SelectItem>
-                  <SelectItem value="Personal Care">Personal Care</SelectItem>
-                  <SelectItem value="Home Decor">Home Decor</SelectItem>
-                  <SelectItem value="Jewelry">Jewelry</SelectItem>
-                  <SelectItem value="Educational">Educational</SelectItem>
-                  <SelectItem value="Cultural Art">Cultural Art</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="col-span-3 space-y-1">
+                <Select 
+                  value={currentProduct?.category || ''}
+                  onValueChange={(value) => setCurrentProduct({...currentProduct, category: value})}
+                >
+                  <SelectTrigger className={formErrors.category ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pottery">Pottery</SelectItem>
+                    <SelectItem value="Textiles">Textiles</SelectItem>
+                    <SelectItem value="Woodwork">Woodwork</SelectItem>
+                    <SelectItem value="Art">Art</SelectItem>
+                    <SelectItem value="Culinary">Culinary</SelectItem>
+                    <SelectItem value="Personal Care">Personal Care</SelectItem>
+                    <SelectItem value="Home Decor">Home Decor</SelectItem>
+                    <SelectItem value="Jewelry">Jewelry</SelectItem>
+                    <SelectItem value="Educational">Educational</SelectItem>
+                    <SelectItem value="Cultural Art">Cultural Art</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formErrors.category && (
+                  <p className="text-xs text-red-500">{formErrors.category}</p>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="craftType" className="text-right">
-                Craft Type
+                Craft Type *
               </Label>
-              <Input
-                id="craftType"
-                value={currentProduct?.craftType || ''}
-                onChange={(e) => setCurrentProduct({...currentProduct, craftType: e.target.value})}
-                className="col-span-3"
-                placeholder="e.g. Hand-painted, Weaving, Carving"
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="craftType"
+                  value={currentProduct?.craftType || ''}
+                  onChange={(e) => setCurrentProduct({...currentProduct, craftType: e.target.value})}
+                  className={formErrors.craftType ? "border-red-500" : ""}
+                  placeholder="e.g. Hand-painted, Weaving, Carving"
+                />
+                {formErrors.craftType && (
+                  <p className="text-xs text-red-500">{formErrors.craftType}</p>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="price" className="text-right">
-                Price (LKR)
+                Price (LKR) *
               </Label>
-              <Input
-                id="price"
-                type="number"
-                value={currentProduct?.price || ''}
-                onChange={(e) => setCurrentProduct({...currentProduct, price: parseInt(e.target.value)})}
-                className="col-span-3"
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="price"
+                  type="number"
+                  value={currentProduct?.price || ''}
+                  onChange={(e) => setCurrentProduct({...currentProduct, price: parseInt(e.target.value) || 0})}
+                  className={formErrors.price ? "border-red-500" : ""}
+                />
+                {formErrors.price && (
+                  <p className="text-xs text-red-500">{formErrors.price}</p>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="description" className="text-right pt-2">
-                Description
+                Description *
               </Label>
-              <Textarea
-                id="description"
-                value={currentProduct?.description || ''}
-                onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})}
-                className="col-span-3"
-                rows={4}
-              />
+              <div className="col-span-3 space-y-1">
+                <Textarea
+                  id="description"
+                  value={currentProduct?.description || ''}
+                  onChange={(e) => setCurrentProduct({...currentProduct, description: e.target.value})}
+                  className={formErrors.description ? "border-red-500" : ""}
+                  rows={4}
+                />
+                {formErrors.description && (
+                  <p className="text-xs text-red-500">{formErrors.description}</p>
+                )}
+                {!formErrors.description && currentProduct?.description && (
+                  <p className="text-xs text-gray-500">
+                    {currentProduct.description.length}/20 characters
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="image" className="text-right">
-                Image URL
+                Image URL *
               </Label>
-              <div className="col-span-3 flex gap-2">
-                <Input
-                  id="image"
-                  value={currentProduct?.image || ''}
-                  onChange={(e) => setCurrentProduct({...currentProduct, image: e.target.value})}
-                  className="flex-1"
-                  placeholder="Enter image URL"
-                />
-                <Button variant="outline" size="icon" className="flex-shrink-0">
-                  <ImagePlus size={16} />
-                </Button>
+              <div className="col-span-3 space-y-1">
+                <div className="flex gap-2">
+                  <Input
+                    id="image"
+                    value={currentProduct?.image || ''}
+                    onChange={(e) => setCurrentProduct({...currentProduct, image: e.target.value})}
+                    className={`flex-1 ${formErrors.image ? "border-red-500" : ""}`}
+                    placeholder="Enter image URL"
+                  />
+                  <Button variant="outline" size="icon" className="flex-shrink-0">
+                    <ImagePlus size={16} />
+                  </Button>
+                </div>
+                {formErrors.image && (
+                  <p className="text-xs text-red-500">{formErrors.image}</p>
+                )}
+                {!formErrors.image && currentProduct?.image && (
+                  <div className="mt-2 w-24 h-24 border rounded overflow-hidden">
+                    <img 
+                      src={currentProduct.image} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = "https://placehold.co/100x100?text=No+Image";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             
@@ -514,71 +659,119 @@ const SellerPortfolio = () => {
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="materials" className="text-right">
-                Materials
+                Materials *
               </Label>
-              <Input
-                id="materials"
-                value={currentProduct?.materials?.join(', ') || ''}
-                onChange={(e) => setCurrentProduct({
-                  ...currentProduct, 
-                  materials: e.target.value.split(',').map(item => item.trim())
-                })}
-                className="col-span-3"
-                placeholder="e.g. Clay, Wood, Natural dyes (comma separated)"
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="materials"
+                  value={currentProduct?.materials?.join(', ') || ''}
+                  onChange={(e) => setCurrentProduct({
+                    ...currentProduct, 
+                    materials: e.target.value.split(',').map(item => item.trim()).filter(item => item !== '')
+                  })}
+                  className={formErrors.materials ? "border-red-500" : ""}
+                  placeholder="e.g. Clay, Wood, Natural dyes (comma separated)"
+                />
+                {formErrors.materials && (
+                  <p className="text-xs text-red-500">{formErrors.materials}</p>
+                )}
+                {!formErrors.materials && currentProduct?.materials?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {currentProduct.materials.map((material, index) => (
+                      material && (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {material}
+                        </Badge>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="grid grid-cols-2 items-center gap-4">
                 <Label htmlFor="rating" className="text-right">
-                  Rating
+                  Rating *
                 </Label>
-                <Input
-                  id="rating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={currentProduct?.rating || ''}
-                  onChange={(e) => setCurrentProduct({...currentProduct, rating: parseFloat(e.target.value)})}
-                />
+                <div className="space-y-1">
+                  <Input
+                    id="rating"
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={currentProduct?.rating || ''}
+                    onChange={(e) => setCurrentProduct({...currentProduct, rating: parseFloat(e.target.value) || 0})}
+                    className={formErrors.rating ? "border-red-500" : ""}
+                  />
+                  {formErrors.rating && (
+                    <p className="text-xs text-red-500">{formErrors.rating}</p>
+                  )}
+                </div>
               </div>
               
               <div className="grid grid-cols-2 items-center gap-4">
                 <Label htmlFor="reviews" className="text-right">
-                  Reviews
+                  Reviews *
                 </Label>
-                <Input
-                  id="reviews"
-                  type="number"
-                  min="0"
-                  value={currentProduct?.reviews || ''}
-                  onChange={(e) => setCurrentProduct({...currentProduct, reviews: parseInt(e.target.value)})}
-                />
+                <div className="space-y-1">
+                  <Input
+                    id="reviews"
+                    type="number"
+                    min="0"
+                    value={currentProduct?.reviews || ''}
+                    onChange={(e) => setCurrentProduct({...currentProduct, reviews: parseInt(e.target.value) || 0})}
+                    className={formErrors.reviews ? "border-red-500" : ""}
+                  />
+                  {formErrors.reviews && (
+                    <p className="text-xs text-red-500">{formErrors.reviews}</p>
+                  )}
+                </div>
               </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="sold" className="text-right">
-                Units Sold
+                Units Sold *
               </Label>
-              <Input
-                id="sold"
-                type="number"
-                min="0"
-                value={currentProduct?.sold || ''}
-                onChange={(e) => setCurrentProduct({...currentProduct, sold: parseInt(e.target.value)})}
-                className="col-span-3"
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="sold"
+                  type="number"
+                  min="0"
+                  value={currentProduct?.sold || ''}
+                  onChange={(e) => setCurrentProduct({...currentProduct, sold: parseInt(e.target.value) || 0})}
+                  className={`col-span-3 ${formErrors.sold ? "border-red-500" : ""}`}
+                />
+                {formErrors.sold && (
+                  <p className="text-xs text-red-500">{formErrors.sold}</p>
+                )}
+              </div>
             </div>
           </div>
+          
+          {Object.keys(formErrors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800 mb-4">
+              <p className="font-medium">Please fix the following errors:</p>
+              <ul className="list-disc list-inside mt-1">
+                {Object.values(formErrors).map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveProduct}>
-              Save Product
+            <Button 
+              onClick={handleSaveProduct} 
+              disabled={isSubmitting}
+              className={isSubmitting ? "opacity-70" : ""}
+            >
+              {isSubmitting ? "Saving..." : "Save Product"}
             </Button>
           </DialogFooter>
         </DialogContent>
