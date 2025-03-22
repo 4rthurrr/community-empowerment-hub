@@ -27,16 +27,16 @@ function AuthRegister() {
 
     // Username validation
     if (!formData.userName.trim()) {
-      tempErrors.userName = "Username is required";
+      tempErrors.userName = "Name is required";
       isValid = false;
     } else if (formData.userName.length < 3) {
-      tempErrors.userName = "Username must be at least 3 characters";
+      tempErrors.userName = "Name must be at least 3 characters";
       isValid = false;
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.userName)) {
-      tempErrors.userName = "Username can only contain letters, numbers and underscores";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.userName)) {
+      tempErrors.userName = "Name can only contain letters and spaces";
       isValid = false;
     }
-
+    
     // Email validation
     if (!formData.email.trim()) {
       tempErrors.email = "Email is required";
