@@ -9,7 +9,9 @@ import { User, ShoppingBag, MapPin, Package } from "lucide-react";
 
 function ShoppingAccount() {
   const { user } = useSelector((state) => state.auth);
-  const isSeller = user?.role === "seller" || true; // For demo purposes, we're showing to all users
+
+
+  const isSeller = user?.role === "seller"; // Only show portfolio to actual sellers
   
   return (
     <div className="flex flex-col">
