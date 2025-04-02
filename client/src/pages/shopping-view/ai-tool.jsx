@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import { businessRules } from './businessLogic';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AIBusinessAdvisorTool = () => {
   // State management
@@ -17,26 +21,138 @@ const AIBusinessAdvisorTool = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [activeTab, setActiveTab] = useState('input');
+  const [model, setModel] = useState(null);
+  const [modelLoading, setModelLoading] = useState(false);
 
   // Available platforms for selection
   const availablePlatforms = [
-    'Etsy', 'Amazon', 'eBay', 'Instagram', 
-    'Facebook', 'TikTok', 'Own Website', 'Local Markets'
+    'Daraz.lk', 'Kapruka', 'WOW.lk', 'Instagram', 
+    'Facebook', 'TikTok', 'Own Website', 'Local Markets/Pola',
+    'Pickme Food', 'ikman.lk'
   ];
 
   // Primary business goals options
   const businessGoals = [
     'Increase Revenue', 'Expand to New Markets', 
     'Optimize Pricing', 'Reduce Costs',
-    'Build Brand Awareness'
+    'Build Brand Awareness', 'Export to Foreign Markets'
   ];
 
   // Product categories
   const productCategories = [
-    'Handmade Crafts', 'Digital Products', 'Food & Beverages',
-    'Fashion & Accessories', 'Home Decor', 'Beauty & Personal Care',
-    'Electronics', 'Services', 'Other'
+    'Handmade Crafts/Handicrafts', 'Digital Products', 'Food & Beverages',
+    'Clothing & Batik', 'Tea Products', 'Spices & Condiments',
+    'Ayurvedic Products', 'Jewelry & Gems', 'Coconut-based Products', 
+    'Tourism Services', 'Other'
   ];
+
+  // Load TensorFlow.js model
+  useEffect(() => {
+    async function loadModel() {
+      try {
+        setModelLoading(true);
+        // Simple regression model to predict growth based on inputs
+        const createdModel = tf.sequential();
+        createdModel.add(tf.layers.dense({units: 12, inputShape: [8], activation: 'relu'}));
+        createdModel.add(tf.layers.dense({units: 8, activation: 'relu'}));
+        createdModel.add(tf.layers.dense({units: 4}));
+        
+        createdModel.compile({
+          optimizer: tf.train.adam(),
+          loss: 'meanSquaredError'
+        });
+        
+        // Initialize with some reasonable weights
+        // In a real implementation, you would load pre-trained weights
+        await initializeModelWithSyntheticData(createdModel);
+        
+        setModel(createdModel);
+        setModelLoading(false);
+      } catch (error) {
+        console.error('Error loading model:', error);
+        setModelLoading(false);
+      }
+    }
+    
+    loadModel();
+    
+    return () => {
+      // Cleanup if needed
+      if (model) {
+        try {
+          model.dispose();
+        } catch (e) {
+          console.error('Error disposing model:', e);
+        }
+      }
+    };
+  }, []);
+  
+  // Initialize model with synthetic data for demonstration
+  const initializeModelWithSyntheticData = async (model) => {
+    // Create synthetic training data based on business logic
+    const numSamples = 500;
+    
+    // Generate feature data (8 features)
+    const inputData = Array.from({length: numSamples}, () => {
+      return [
+        Math.random(), // Category normalized
+        Math.random() * 200, // Price
+        Math.random() * 20000, // Revenue
+        Math.random(), // Goal normalized
+        Math.random(), // Target market size
+        Math.random() * 5, // Num competitors
+        Math.random(), // Platform usage normalized
+        Math.random() // Market saturation
+      ];
+    });
+    
+    // Generate output data (4 outputs)
+    const outputData = inputData.map(features => {
+      // Apply business logic to generate realistic outputs
+      const priceToRevenueRatio = features[1] / features[2];
+      const marketSaturation = features[7];
+      const platformDiversity = features[6];
+      
+      // Growth prediction
+      const growth = 0.05 + 0.1 * (1 - priceToRevenueRatio) + 0.05 * platformDiversity - 0.1 * marketSaturation;
+      
+      // Price elasticity
+      const priceElasticity = 0.8 + 0.4 * Math.random();
+      
+      // Optimal price change
+      const optimalPriceChange = priceElasticity < 1 ? 0.15 : -0.05;
+      
+      // Market share potential
+      const marketSharePotential = 0.05 + 0.1 * platformDiversity - 0.05 * marketSaturation;
+      
+      return [
+        Math.max(0, Math.min(0.4, growth)), // Growth rate (0-40%)
+        priceElasticity, // Price elasticity
+        optimalPriceChange, // Recommended price change (-5% to +15%)
+        marketSharePotential // Market share potential (0-15%)
+      ];
+    });
+    
+    // Convert to tensors
+    const xs = tf.tensor2d(inputData);
+    const ys = tf.tensor2d(outputData);
+    
+    // Train the model with synthetic data
+    await model.fit(xs, ys, {
+      epochs: 50,
+      batchSize: 32,
+      callbacks: {
+        onEpochEnd: (epoch, logs) => {
+          console.log(`Epoch ${epoch}: loss = ${logs.loss}`);
+        }
+      }
+    });
+    
+    // Clean up tensors
+    xs.dispose();
+    ys.dispose();
+  };
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -108,168 +224,290 @@ const AIBusinessAdvisorTool = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsLoading(true);
       
-      // Simulate API call
-      setTimeout(() => {
-        setAnalysisResults(generateMockResults());
-        setIsLoading(false);
+      try {
+        // Generate real analysis with local ML model
+        const results = await generateRealAnalysis();
+        setAnalysisResults(results);
         setActiveTab('results');
-      }, 2000);
+      } catch (error) {
+        console.error('Error generating analysis:', error);
+        // Fallback to rule-based analysis if ML fails
+        const fallbackResults = generateRuleBasedAnalysis();
+        setAnalysisResults(fallbackResults);
+        setActiveTab('results');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  // Generate mock analysis results
-  const generateMockResults = () => {
-    const pricingRecommendation = parseFloat(formData.currentPricing) * 1.15;
+  // Process input data for the model
+  const preprocessInput = () => {
+    // Normalize categorical variables
+    const categoryIdx = productCategories.indexOf(formData.productCategory) / productCategories.length;
+    const goalIdx = businessGoals.indexOf(formData.primaryGoal) / businessGoals.length;
+    
+    // Extract numeric values
+    const price = parseFloat(formData.currentPricing);
+    const revenue = parseFloat(formData.monthlyRevenue);
+    
+    // Estimate market size from target market description (simple heuristic)
+    const marketSize = formData.targetMarket.length / 100; // Simplistic proxy
+    
+    // Count competitors
+    const competitorCount = formData.competitorUrls ? 
+      formData.competitorUrls.split(',').length : 0;
+    
+    // Platform diversity score
+    const platformDiversity = formData.platformsUsed.length / availablePlatforms.length;
+    
+    // Market saturation estimate (simplified)
+    const marketSaturation = Math.min(competitorCount * 0.1, 1);
+    
+    return [
+      categoryIdx,
+      price,
+      revenue,
+      goalIdx,
+      marketSize,
+      competitorCount,
+      platformDiversity,
+      marketSaturation
+    ];
+  };
+
+  // Generate analysis using the ML model
+  const generateRealAnalysis = async () => {
+    if (!model) {
+      throw new Error('Model not loaded');
+    }
+    
+    // Preprocess input data
+    const processedInput = preprocessInput();
+    
+    // Make prediction with the model
+    const inputTensor = tf.tensor2d([processedInput]);
+    const prediction = model.predict(inputTensor);
+    const predictionData = await prediction.data();
+    
+    // Clean up tensors
+    inputTensor.dispose();
+    prediction.dispose();
+    
+    // Extract predictions
+    const growthRate = predictionData[0];
+    const priceElasticity = predictionData[1];
+    const recommendedPriceChange = predictionData[2];
+    const marketSharePotential = predictionData[3];
+    
+    // Apply business rules for recommendations based on ML predictions
+    return businessLogicAnalysis(
+      growthRate,
+      priceElasticity,
+      recommendedPriceChange,
+      marketSharePotential
+    );
+  };
+  
+  // Apply business logic and rules to generate complete analysis
+  const businessLogicAnalysis = (growthRate, priceElasticity, recommendedPriceChange, marketSharePotential) => {
+    const price = parseFloat(formData.currentPricing);
     const monthlyRevenueNum = parseFloat(formData.monthlyRevenue);
     
+    // --- FIX 1: Sanitize ML model outputs with reasonable boundaries ---
+    // Ensure growth rate is within reasonable bounds
+    const sanitizedGrowthRate = Math.max(-0.3, Math.min(0.5, growthRate));
+    
+    // Ensure price elasticity is within reasonable bounds
+    const sanitizedPriceElasticity = Math.max(0.5, Math.min(2.0, priceElasticity));
+    
+    // Ensure price change is within reasonable bounds (max 50% increase or 30% decrease)
+    const sanitizedPriceChange = Math.max(-0.3, Math.min(0.5, recommendedPriceChange));
+    
+    // Ensure market share potential is within reasonable bounds
+    const sanitizedMarketSharePotential = Math.max(0.01, Math.min(0.2, marketSharePotential));
+    
+    // --- FIX 2: Apply reasonable price recommendations ---
+    // Calculate recommended price based on elasticity and recommended change
+    const pricingRecommendation = price * (1 + sanitizedPriceChange);
+    
+    // --- FIX 3: Ensure reasonable market share values ---
+    // Calculate market share (assuming current is between 5-15% based on inputs)
+    const currentMarketShare = 5 + Math.random() * 10; // Simplified estimate
+    const potentialMarketShare = currentMarketShare + (sanitizedMarketSharePotential * 100);
+    
+    // --- FIX 4: Ensure growth percentage calculation doesn't result in NaN ---
+    // Calculate 6-month revenue growth percentage (for executive summary)
+    const sixMonthGrowthPercent = Math.round((Math.pow(1 + sanitizedGrowthRate, 0.5) - 1) * 100);
+    
+    // Generate seasonal trends based on product category
+    const seasonalTrends = businessRules.generateSeasonalTrends(formData.productCategory);
+    
+    // Peak months based on actual seasonal data
+    const peakMonths = seasonalTrends
+      .filter(s => s.value > 110)
+      .map(s => s.month)
+      .join(' and ');
+    
+    // Generate competitor analysis
+    const competitorAnalysis = businessRules.generateCompetitorAnalysis(
+      currentMarketShare, 
+      formData.productCategory,
+      price
+    );
+    
+    // --- FIX 5: Ensure revenue projections use sanitized growth rate ---
+    // Generate financial projections based on growth rate
+    const revenueData = businessRules.generateRevenueProjection(
+      monthlyRevenueNum,
+      sanitizedGrowthRate
+    );
+    
+    // --- FIX 6: Ensure realistic profit margins ---
+    // Calculate profit margins based on inputs and category
+    // Categories like handicrafts tend to have higher margins than commodity products
+    let baseProfitMargin = 25; // Default value
+    
+    if (formData.productCategory.includes('Handmade') || 
+        formData.productCategory.includes('Jewelry') || 
+        formData.productCategory.includes('Ayurvedic')) {
+      baseProfitMargin = 35; // Higher margin categories
+    } else if (formData.productCategory.includes('Electronics') || 
+               formData.productCategory.includes('Food')) {
+      baseProfitMargin = 20; // Lower margin categories
+    }
+    
+    const currentProfitMargin = Math.round(baseProfitMargin + (Math.random() * 5 - 2.5));
+    
+    // Keep projected profit margin increase within realistic bounds (max 15% increase)
+    const projectedProfitMargin = Math.round(
+      currentProfitMargin + Math.min(15, Math.max(-10, sanitizedPriceChange * 100 * 0.7))
+    );
+    
+    const industryProfitMargin = Math.round(baseProfitMargin - 2 + (Math.random() * 4));
+    
+    // Generate pricing recommendations
+    const pricingStrategy = businessRules.generatePricingStrategy(
+      price,
+      pricingRecommendation,
+      sanitizedPriceElasticity,
+      formData.productCategory
+    );
+    
+    // Generate growth opportunities based on platforms
+    const growthOpportunities = businessRules.generateGrowthOpportunities(
+      formData.platformsUsed,
+      formData.targetMarket,
+      formData.primaryGoal,
+      formData.productCategory
+    );
+    
+    // Generate risks based on market and business conditions
+    const risks = businessRules.generateRisks(
+      formData.productCategory,
+      sanitizedGrowthRate,
+      sanitizedMarketSharePotential
+    );
+    
+    // Generate action plan based on all insights
+    const actionPlan = businessRules.generateActionPlan(
+      pricingRecommendation,
+      formData.primaryGoal,
+      growthOpportunities.platforms,
+      risks
+    );
+    
+    // Set primary challenge from highest severity risk
+    const highestRisk = risks.sort((a, b) => {
+      const severityValues = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      return severityValues[b.severity] - severityValues[a.severity];
+    })[0];
+    
+    // --- FIX 7: Create properly formatted output with sanitized values ---
     return {
+      summaryMetrics: {
+        growthPotential: `${sixMonthGrowthPercent}% projected revenue increase over 6 months`,
+        primaryChallenge: highestRisk.description,
+        topRecommendation: sanitizedPriceChange > 0 
+          ? `${Math.round(sanitizedPriceChange * 100)}% price increase & product bundles` 
+          : 'Maintain current pricing & focus on marketing',
+        marketPosition: `${Math.round(currentMarketShare)}% market share with ${sanitizedMarketSharePotential > 0.1 ? 'strong' : 'moderate'} growth opportunity`
+      },
       marketTrends: {
-        overall: `The ${formData.productCategory} market is showing 12% growth YoY with increasing demand for sustainable options`,
-        seasonal: [
-          { month: 'Jan', trend: 'Low', value: 60, reason: 'Post-holiday decline' },
-          { month: 'Feb', trend: 'Low', value: 65, reason: 'Seasonal lull' },
-          { month: 'Mar', trend: 'Medium', value: 75, reason: 'Spring shopping' },
-          { month: 'Apr', trend: 'Medium', value: 80, reason: 'Tax refunds' },
-          { month: 'May', trend: 'Medium', value: 85, reason: 'Mother\'s Day' },
-          { month: 'Jun', trend: 'Medium', value: 90, reason: 'Summer season' },
-          { month: 'Jul', trend: 'Medium', value: 95, reason: 'Mid-year sales' },
-          { month: 'Aug', trend: 'High', value: 110, reason: 'Back-to-school' },
-          { month: 'Sep', trend: 'Medium', value: 90, reason: 'Fall shopping' },
-          { month: 'Oct', trend: 'High', value: 105, reason: 'Halloween' },
-          { month: 'Nov', trend: 'High', value: 120, reason: 'Holiday shopping' },
-          { month: 'Dec', trend: 'Very High', value: 140, reason: 'Christmas sales' }
-        ],
-        competitiveLandscape: `Medium saturation in ${formData.productCategory}`,
-        competitorAnalysis: [
-          { name: 'Competitor A', marketShare: 28, pricePoint: 'High', quality: 'Premium' },
-          { name: 'Competitor B', marketShare: 15, pricePoint: 'Medium', quality: 'Standard' },
-          { name: 'Your Business', marketShare: 8, pricePoint: 'Medium', quality: 'High' },
-          { name: 'Competitor C', marketShare: 22, pricePoint: 'Low', quality: 'Economy' },
-          { name: 'Others', marketShare: 27, pricePoint: 'Various', quality: 'Mixed' }
-        ]
+        overall: `The ${formData.productCategory} market in Sri Lanka is showing ${(sanitizedGrowthRate * 100).toFixed(1)}% growth YoY with ${
+          sanitizedMarketSharePotential > 0.1 ? 'significant' : 'moderate'
+        } opportunity for expansion`,
+        seasonal: seasonalTrends,
+        competitiveLandscape: `${
+          competitorAnalysis.filter(c => c.name !== 'Your Business' && c.name !== 'Others').length > 3 
+            ? 'High' 
+            : 'Medium'
+        } saturation in the ${formData.productCategory} segment, with peak demand during ${peakMonths || 'festival seasons'}`,
+        competitorAnalysis: competitorAnalysis
       },
       financialProjections: {
-        revenueData: [
-          { month: 'Current', amount: monthlyRevenueNum },
-          { month: 'Month 1', amount: monthlyRevenueNum * 1.05 },
-          { month: 'Month 2', amount: monthlyRevenueNum * 1.08 },
-          { month: 'Month 3', amount: monthlyRevenueNum * 1.12 },
-          { month: 'Month 4', amount: monthlyRevenueNum * 1.15 },
-          { month: 'Month 5', amount: monthlyRevenueNum * 1.19 },
-          { month: 'Month 6', amount: monthlyRevenueNum * 1.24 }
-        ],
+        revenueData: revenueData,
         profitMargin: {
-          current: 22,
-          projected: 26,
-          industry: 24
+          current: currentProfitMargin,
+          projected: projectedProfitMargin,
+          industry: industryProfitMargin
         },
         breakEvenAnalysis: {
           fixedCosts: monthlyRevenueNum * 0.35,
-          variableCostsPerUnit: parseFloat(formData.currentPricing) * 0.45,
-          breakEvenUnits: Math.round((monthlyRevenueNum * 0.35) / (parseFloat(formData.currentPricing) * 0.55))
+          variableCostsPerUnit: price * 0.45,
+          breakEvenUnits: Math.round((monthlyRevenueNum * 0.35) / (price * 0.55))
         }
       },
-      pricingStrategy: {
-        currentAverage: `$${formData.currentPricing}`,
-        recommendedPrice: `$${pricingRecommendation.toFixed(2)}`,
-        priceElasticity: 'Medium',
-        competitivePricing: [
-          { competitor: 'Market Low', price: parseFloat(formData.currentPricing) * 0.8 },
-          { competitor: 'Market Average', price: parseFloat(formData.currentPricing) * 1.05 },
-          { competitor: 'Your Current', price: parseFloat(formData.currentPricing) },
-          { competitor: 'Recommended', price: pricingRecommendation },
-          { competitor: 'Market High', price: parseFloat(formData.currentPricing) * 1.4 }
-        ],
-        bundleOpportunities: [
-          'Bundle with complementary products for 22% higher AOV',
-          'Create holiday gift sets for November-December',
-          'Introduce tiered pricing with premium options'
-        ]
-      },
-      growthOpportunities: {
-        platforms: formData.platformsUsed.includes('TikTok') ? 
-          ['Pinterest', 'YouTube'] : ['TikTok', 'Instagram Reels'],
-        channelPerformance: [
-          { channel: 'Email', conversionRate: 3.2, aov: parseFloat(formData.currentPricing) * 1.2 },
-          { channel: 'Social', conversionRate: 1.8, aov: parseFloat(formData.currentPricing) * 0.9 },
-          { channel: 'Organic Search', conversionRate: 2.5, aov: parseFloat(formData.currentPricing) * 1.1 },
-          { channel: 'Direct', conversionRate: 4.0, aov: parseFloat(formData.currentPricing) * 1.3 }
-        ],
-        customerSegments: [
-          'Eco-conscious millennials',
-          'Corporate gift market',
-          'Luxury segment seeking artisanal products'
-        ],
-        marketExpansion: formData.primaryGoal === 'Expand to New Markets' ?
-          'International shipping to Canada and UK shows high potential' :
-          'Focus on domestic market optimization first',
-        keywordOpportunities: [
-          { keyword: 'sustainable ' + formData.productCategory.toLowerCase(), volume: 'High', competition: 'Medium' },
-          { keyword: 'handmade ' + formData.productCategory.toLowerCase(), volume: 'Medium', competition: 'Low' },
-          { keyword: 'local ' + formData.productCategory.toLowerCase(), volume: 'Medium', competition: 'Low' }
-        ]
-      },
-      risks: [
-        {
-          severity: 'Medium',
-          description: 'Increasing competition in Q1 2025',
-          mitigation: 'Differentiate through unique packaging and storytelling',
-          impact: 'Potential 12% revenue decrease if not addressed'
-        },
-        {
-          severity: 'Low',
-          description: 'Potential supply chain delays in February',
-          mitigation: 'Stock up on essential materials in January',
-          impact: 'Could delay production by 1-2 weeks'
-        },
-        {
-          severity: 'High',
-          description: 'Rising cost of raw materials',
-          mitigation: 'Lock in contracts with suppliers now or explore alternative materials',
-          impact: 'Could reduce profit margins by 15% within 6 months'
-        }
-      ],
-      actionPlan: {
-        immediate: [
-          'Implement recommended price increase of 15% gradually over 45 days',
-          'Create 3 product bundles based on top-selling items',
-          'Optimize product listings with identified keyword opportunities'
-        ],
-        shortTerm: [
-          'Develop content strategy for 2 new recommended platforms',
-          'Launch targeted campaign for corporate gift market before holiday season',
-          'Secure supply chain agreements to mitigate identified risks'
-        ],
-        longTerm: [
-          'Expand product line with 2-3 premium options at higher price points',
-          'Develop international shipping capabilities for Canada and UK markets',
-          'Create loyalty program to increase customer retention by 20%'
-        ]
-      }
+      pricingStrategy: pricingStrategy,
+      growthOpportunities: growthOpportunities,
+      risks: risks,
+      actionPlan: actionPlan
     };
   };
 
-  // Render chart for seasonal trends
+  // Fallback to pure rule-based analysis if ML fails
+  const generateRuleBasedAnalysis = () => {
+    const price = parseFloat(formData.currentPricing);
+    const monthlyRevenueNum = parseFloat(formData.monthlyRevenue);
+    
+    // Apply business rules without ML but with realistic values
+    return businessLogicAnalysis(
+      0.12,                 // 12% annual growth rate
+      1.2,                  // Medium elasticity 
+      0.15,                 // 15% price increase recommendation
+      0.08                  // 8% market share potential
+    );
+  };
+
+  // Render chart for seasonal trends with improved spacing and local context
   const renderSeasonalTrendChart = () => {
     if (!analysisResults) return null;
     
     const trends = analysisResults.marketTrends.seasonal;
+    const peakMonths = trends
+      .filter(month => month.value > 110)
+      .map(month => month.month)
+      .join(', ');
     
     return (
-      <div className="mt-4">
-        <h4 className="text-lg font-medium mb-2">Seasonal Trend Forecast</h4>
+      <div className="bg-white p-5 rounded-lg shadow-sm mt-4">
+        <h4 className="text-lg font-medium mb-1">මෙයින් කාලීන ඉල්ලුම හඳුනා ගන්න (Seasonal Demand)</h4>
+        <p className="text-sm text-gray-600 mb-4">
+          ඔබේ අලෙවිය වැඩි කිරීමට හොඳම මාස: <span className="font-semibold">{peakMonths}</span>
+          <br/><span className="text-xs">(Best months to focus on marketing and stock preparation)</span>
+        </p>
         <div className="overflow-x-auto pb-2">
-          <div className="flex items-end h-48 gap-2 min-w-[720px]">
+          <div className="flex items-end h-52 gap-3 min-w-[720px]">
             {trends.map((item, index) => (
               <div key={index} className="flex flex-col items-center flex-1">
                 <div 
-                  className="w-full bg-blue-600 rounded-t-md flex items-center justify-center text-white text-xs font-medium"
+                  className="w-full rounded-t-md flex items-center justify-center text-white text-xs font-medium"
                   style={{ 
                     height: `${(item.value / 140) * 100}%`,
                     backgroundColor: getColorForValue(item.value)
@@ -283,60 +521,92 @@ const AIBusinessAdvisorTool = () => {
             ))}
           </div>
         </div>
+        <div className="mt-3 bg-blue-50 p-2 rounded-md">
+          <p className="text-xs text-blue-800">
+            <span className="font-bold">TIP:</span> Plan marketing campaigns and inventory around peak seasons. Values above 100 indicate higher than average demand.
+          </p>
+        </div>
       </div>
     );
   };
 
-  // Render competitor pricing chart
+  // Render competitor pricing chart with better alignment and explanation
   const renderCompetitorPricingChart = () => {
     if (!analysisResults) return null;
     
     const pricingData = analysisResults.pricingStrategy.competitivePricing;
+    const currentPrice = pricingData.find(item => item.competitor === 'Your Current')?.price || 0;
+    const recommendedPrice = pricingData.find(item => item.competitor === 'Recommended')?.price || 0;
+    const percentChange = ((recommendedPrice - currentPrice) / currentPrice * 100).toFixed(1);
     
     return (
-      <div className="mt-6">
-        <h4 className="text-lg font-medium mb-2">Competitive Price Analysis</h4>
-        <div className="relative h-16 bg-gray-100 rounded-md my-8 flex items-center">
+      <div className="bg-white p-5 rounded-lg shadow-sm mt-6">
+        <h4 className="text-lg font-medium mb-1">තරඟකාරී මිල විශ්ලේෂණය (Competitive Pricing)</h4>
+        <p className="text-sm text-gray-600 mb-4">
+          නිර්දේශිත මිල වෙනස: <span className={`font-semibold ${percentChange > 0 ? 'text-green-700' : 'text-red-700'}`}>
+            {percentChange > 0 ? '+' : ''}{percentChange}%
+          </span>
+          <br/><span className="text-xs">(Compare your price position in the market)</span>
+        </p>
+        <div className="relative h-20 bg-gray-100 rounded-md my-8 flex items-center">
           {pricingData.map((item, index) => (
             <div 
               key={index} 
               className="absolute transform -translate-x-1/2"
               style={{ 
                 left: `${(item.price / (pricingData[4].price * 1.1)) * 100}%`,
-                top: item.competitor === 'Your Current' || item.competitor === 'Recommended' ? '-14px' : '16px'
+                top: item.competitor === 'Your Current' || item.competitor === 'Recommended' ? '-20px' : '20px'
               }}
             >
               <div 
-                className={`w-4 h-4 rounded-full mx-auto ${
+                className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center ${
                   item.competitor === 'Your Current' ? 'bg-blue-600' : 
                   item.competitor === 'Recommended' ? 'bg-green-600' : 'bg-gray-400'
                 }`}
-              ></div>
+              >
+                {item.competitor === 'Your Current' && <span className="text-white text-xs">C</span>}
+                {item.competitor === 'Recommended' && <span className="text-white text-xs">R</span>}
+              </div>
               <div className={`text-xs font-medium mt-1 whitespace-nowrap ${
                 item.competitor === 'Your Current' ? 'text-blue-600' : 
                 item.competitor === 'Recommended' ? 'text-green-600' : 'text-gray-600'
               }`}>
-                ${item.price.toFixed(2)}
+                LKR {item.price.toFixed(0)}
               </div>
               <div className="text-xs text-gray-500 whitespace-nowrap">{item.competitor}</div>
             </div>
           ))}
         </div>
+        <div className="mt-3 flex gap-4 text-center">
+          <div className="flex items-center gap-1 mx-auto">
+            <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+            <span className="text-xs">ඔබේ වත්මන් මිල (Current)</span>
+          </div>
+          <div className="flex items-center gap-1 mx-auto">
+            <div className="w-3 h-3 rounded-full bg-green-600"></div>
+            <span className="text-xs">නිර්දේශිත මිල (Recommended)</span>
+          </div>
+        </div>
       </div>
     );
   };
 
-  // Render market share pie chart
+  // Render market share pie chart with improved visual explanation
   const renderMarketShareChart = () => {
     if (!analysisResults) return null;
     
     const competitorData = analysisResults.marketTrends.competitorAnalysis;
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const yourShare = competitorData.find(item => item.name === 'Your Business')?.marketShare || 0;
     
     return (
-      <div className="mt-6">
-        <h4 className="text-lg font-medium mb-2">Market Share Analysis</h4>
-        <div className="flex">
+      <div className="bg-white p-5 rounded-lg shadow-sm mt-4">
+        <h4 className="text-lg font-medium mb-1">වෙළඳපොළ කොටස් විශ්ලේෂණය (Market Share)</h4>
+        <p className="text-sm text-gray-600 mb-4">
+          ඔබගේ වෙළඳපොළ කොටස: <span className="font-semibold">{yourShare}%</span>
+          <br/><span className="text-xs">(Your position compared to competitors)</span>
+        </p>
+        <div className="flex flex-col sm:flex-row items-center gap-5">
           <div className="relative w-48 h-48">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               {competitorData.map((item, index) => {
@@ -351,7 +621,7 @@ const AIBusinessAdvisorTool = () => {
                 
                 // Convert to radians for SVG arc
                 const startRad = (startAngle - 90) * Math.PI / 180;
-                const endRad = (endAngle - 90) * Math.PI / 180;
+                const endRad = ((endAngle - 90) * Math.PI / 180);
                 
                 const x1 = 50 + 40 * Math.cos(startRad);
                 const y1 = 50 + 40 * Math.sin(startRad);
@@ -380,35 +650,48 @@ const AIBusinessAdvisorTool = () => {
               })}
             </svg>
           </div>
-          <div className="ml-4 flex flex-col justify-center">
+          <div className="flex flex-col justify-center space-y-2">
             {competitorData.map((item, index) => (
-              <div key={index} className="flex items-center mb-2">
+              <div key={index} className="flex items-center">
                 <div 
-                  className="w-3 h-3 rounded-sm mr-2" 
+                  className="w-4 h-4 rounded-sm mr-2" 
                   style={{ backgroundColor: colors[index % colors.length] }}
                 ></div>
                 <span className={`text-sm ${item.name === 'Your Business' ? 'font-bold' : ''}`}>
-                  {item.name} ({item.marketShare}%)
+                  {item.name === 'Your Business' ? 'ඔබගේ ව්‍යාපාරය' : item.name} ({item.marketShare}%)
                 </span>
               </div>
             ))}
           </div>
         </div>
+        <div className="mt-3 bg-blue-50 p-2 rounded-md">
+          <p className="text-xs text-blue-800">
+            <span className="font-bold">TIP:</span> Focus on growing your market share by targeting specific competitor 
+            weaknesses or exploring underserved customer segments.
+          </p>
+        </div>
       </div>
     );
   };
 
-  // Render projected revenue chart
+  // Render projected revenue chart with simplified explanation
   const renderProjectedRevenueChart = () => {
     if (!analysisResults) return null;
     
     const revenueData = analysisResults.financialProjections.revenueData;
+    const currentRevenue = revenueData[0].amount;
+    const projectedRevenue = revenueData[revenueData.length-1].amount;
+    const growthPercent = ((projectedRevenue - currentRevenue) / currentRevenue * 100).toFixed(1);
     
     return (
-      <div className="mt-6">
-        <h4 className="text-lg font-medium mb-2">Projected Revenue (6 Months)</h4>
+      <div className="bg-white p-5 rounded-lg shadow-sm mt-4">
+        <h4 className="text-lg font-medium mb-1">ආදායම් පුරෝකථනය (Revenue Forecast)</h4>
+        <p className="text-sm text-gray-600 mb-4">
+          මාස 6ක ආදායම් වර්ධනය: <span className="font-semibold text-green-700">+{growthPercent}%</span>
+          <br/><span className="text-xs">(Projected revenue growth over next 6 months)</span>
+        </p>
         <div className="overflow-x-auto pb-2">
-          <div className="flex items-end h-48 gap-4 min-w-[600px]">
+          <div className="flex items-end h-52 gap-4 min-w-[500px]">
             {revenueData.map((item, index) => (
               <div key={index} className="flex flex-col items-center flex-1">
                 <div 
@@ -417,44 +700,79 @@ const AIBusinessAdvisorTool = () => {
                     height: `${(item.amount / (revenueData[revenueData.length - 1].amount * 1.1)) * 100}%`
                   }}
                 >
-                  ${item.amount.toFixed(0)}
+                  LKR {(item.amount/1000).toFixed(0)}K
                 </div>
                 <div className="text-xs mt-1 font-semibold">{item.month}</div>
               </div>
             ))}
           </div>
         </div>
+        <div className="mt-3 bg-blue-50 p-2 rounded-md">
+          <p className="text-xs text-blue-800">
+            <span className="font-bold">TIP:</span> This forecast is based on implementing our recommended 
+            pricing and marketing strategies. Use this to plan your cash flow and investments.
+          </p>
+        </div>
       </div>
     );
   };
 
-  // Render channel performance chart
-  const renderChannelPerformanceChart = () => {
+  // Simplified profit margin display
+  const renderProfitMargins = () => {
     if (!analysisResults) return null;
     
-    const channelData = analysisResults.growthOpportunities.channelPerformance;
+    const { current, projected, industry } = analysisResults.financialProjections.profitMargin;
+    const improvement = projected - current;
     
     return (
-      <div className="mt-6">
-        <h4 className="text-lg font-medium mb-2">Channel Performance</h4>
-        <div className="space-y-3">
-          {channelData.map((channel, index) => (
-            <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
-              <div className="flex justify-between mb-1">
-                <span className="font-medium">{channel.channel}</span>
-                <span className="text-sm">AOV: ${channel.aov.toFixed(2)}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
-                  style={{ width: `${channel.conversionRate * 10}%` }}
-                ></div>
-              </div>
-              <div className="text-right text-xs mt-1 text-gray-500">
-                {channel.conversionRate}% Conversion Rate
-              </div>
-            </div>
-          ))}
+      <div className="bg-white p-4 rounded-lg shadow-sm">
+        <h4 className="font-medium text-gray-700 text-sm mb-2">ලාභ ආන්තිකය (Profit Margin)</h4>
+        
+        <div className="flex items-center mt-3">
+          <div className="w-24 text-xs text-right pr-2">ඔබගේ වත්මන්:</div>
+          <div className="w-full bg-gray-200 rounded-full h-3 mr-2">
+            <div 
+              className="bg-blue-600 h-3 rounded-full" 
+              style={{ width: `${Math.min(100, current)}%` }}
+            ></div>
+          </div>
+          <span className="text-sm font-medium w-12">
+            {current}%
+          </span>
+        </div>
+        
+        <div className="flex items-center mt-3">
+          <div className="w-24 text-xs text-right pr-2">පුරෝකථනය:</div>
+          <div className="w-full bg-gray-200 rounded-full h-3 mr-2">
+            <div 
+              className="bg-green-600 h-3 rounded-full" 
+              style={{ width: `${Math.min(100, projected)}%` }}
+            ></div>
+          </div>
+          <span className="text-sm font-medium w-12">
+            {projected}%
+          </span>
+        </div>
+        
+        <div className="flex items-center mt-3">
+          <div className="w-24 text-xs text-right pr-2">කර්මාන්ත සාමාන්ය:</div>
+          <div className="w-full bg-gray-200 rounded-full h-3 mr-2">
+            <div 
+              className="bg-gray-500 h-3 rounded-full" 
+              style={{ width: `${Math.min(100, industry)}%` }}
+            ></div>
+          </div>
+          <span className="text-sm font-medium w-12">
+            {industry}%
+          </span>
+        </div>
+        
+        <div className="mt-3 pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-600">
+            {improvement > 0 ? 
+              `Our recommendations could improve your profit margin by +${improvement}%` : 
+              'Focus on maintaining current margin while growing revenue'}
+          </p>
         </div>
       </div>
     );
@@ -471,566 +789,419 @@ const AIBusinessAdvisorTool = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen py-8">
-        <br />
-    <div className="max-w-4xl mx-auto p-4 bg-white rounded-lg shadow">
+      <br />
+      <div className="max-w-4xl mx-auto p-4 bg-white rounded-lg shadow">
         
-      <h1 className="text-2xl font-bold text-center mb-6">AI Business Advisor Tool</h1>
-      <p className="text-center mb-8 text-gray-600">Empower your business with data-driven insights and actionable strategies</p>
-      
-      {/* Navigation Tabs */}
-      <div className="flex border-b mb-6">
-        <button 
-          className={`py-2 px-4 font-medium ${activeTab === 'input' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('input')}
-        >
-          Business Input
-        </button>
-        <button 
-          className={`py-2 px-4 font-medium ${activeTab === 'results' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('results')}
-          disabled={!analysisResults}
-        >
-          Analysis Results
-        </button>
-      </div>
-      
-      {activeTab === 'input' && (
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Business Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Business Name
-              </label>
-              <input
-                type="text"
-                name="businessName"
-                value={formData.businessName}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.businessName ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Your Business Name"
-              />
-              {errors.businessName && (
-                <p className="mt-1 text-sm text-red-500">{errors.businessName}</p>
-              )}
-            </div>
-            
-            {/* Product Category */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Category
-              </label>
-              <select
-                name="productCategory"
-                value={formData.productCategory}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.productCategory ? 'border-red-500' : 'border-gray-300'}`}
-              >
-                <option value="">Select a category</option>
-                {productCategories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              {errors.productCategory && (
-                <p className="mt-1 text-sm text-red-500">{errors.productCategory}</p>
-              )}
-            </div>
-            
-            {/* Current Pricing */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Average Product Price ($)
-              </label>
-              <input
-                type="text"
-                name="currentPricing"
-                value={formData.currentPricing}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.currentPricing ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="29.99"
-              />
-              {errors.currentPricing && (
-                <p className="mt-1 text-sm text-red-500">{errors.currentPricing}</p>
-              )}
-            </div>
-            
-            {/* Monthly Revenue */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Monthly Revenue ($)
-              </label>
-              <input
-                type="text"
-                name="monthlyRevenue"
-                value={formData.monthlyRevenue}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.monthlyRevenue ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="5000"
-              />
-              {errors.monthlyRevenue && (
-                <p className="mt-1 text-sm text-red-500">{errors.monthlyRevenue}</p>
-              )}
-            </div>
-            
-            {/* Primary Goal */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Primary Business Goal
-              </label>
-              <select
-                name="primaryGoal"
-                value={formData.primaryGoal}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.primaryGoal ? 'border-red-500' : 'border-gray-300'}`}
-              >
-                <option value="">Select your primary goal</option>
-                {businessGoals.map(goal => (
-                  <option key={goal} value={goal}>{goal}</option>
-                ))}
-              </select>
-              {errors.primaryGoal && (
-                <p className="mt-1 text-sm text-red-500">{errors.primaryGoal}</p>
-              )}
-            </div>
-            
-            {/* Target Market */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Target Market Description
-              </label>
-              <input
-                type="text"
-                name="targetMarket"
-                value={formData.targetMarket}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md ${errors.targetMarket ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="e.g., Women 25-34, health-conscious"
-              />
-              {errors.targetMarket && (
-                <p className="mt-1 text-sm text-red-500">{errors.targetMarket}</p>
-              )}
-            </div>
-            
-            {/* Competitor URLs */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Competitor URLs (Optional)
-              </label>
-              <textarea
-                name="competitorUrls"
-                value={formData.competitorUrls}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Enter competitor websites separated by commas"
-                rows={2}
-              />
-            </div>
-            
-            {/* Platforms Used */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Platforms Currently Using
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {availablePlatforms.map(platform => (
-                  <div key={platform} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={platform}
-                      checked={formData.platformsUsed.includes(platform)}
-                      onChange={() => handlePlatformChange(platform)}
-                      className="mr-2"
-                    />
-                    <label htmlFor={platform} className="text-sm">{platform}</label>
-                  </div>
-                ))}
-              </div>
-              {errors.platformsUsed && (
-                <p className="mt-1 text-sm text-red-500">{errors.platformsUsed}</p>
-              )}
-            </div>
+        <h1 className="text-2xl font-bold text-center mb-6">AI Business Advisor Tool</h1>
+        <p className="text-center mb-8 text-gray-600">Empower your business with data-driven insights and actionable strategies</p>
+        
+        {modelLoading && (
+          <div className="text-center p-4 mb-4 bg-blue-50 rounded-lg">
+            <p className="text-blue-700">Loading AI business model...</p>
           </div>
-          
-          <div className="mt-8 text-center">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Analyzing...' : 'Generate Business Insights'}
-            </button>
-          </div>
-        </form>
-      )}
-      
-      {activeTab === 'results' && analysisResults && (
-        <div className="space-y-8">
-          {/* Summary Section */}
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-2">Executive Summary</h3>
-            <p className="mb-3">Based on your input for <strong>{formData.businessName}</strong> in the <strong>{formData.productCategory}</strong> category, we've identified the following key insights:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-                <div className="flex">
-                  <div className="bg-blue-100 rounded-full p-2 mr-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
-                      <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Growth Potential</h4>
-                    <p className="text-sm text-gray-600">24% projected revenue increase over 6 months</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-                <div className="flex">
-                  <div className="bg-blue-100 rounded-full p-2 mr-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Primary Challenge</h4>
-                    <p className="text-sm text-gray-600">Rising competition and material costs</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-                <div className="flex">
-                  <div className="bg-blue-100 rounded-full p-2 mr-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Top Recommendation</h4>
-                    <p className="text-sm text-gray-600">15% price increase & product bundles</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-                <div className="flex">
-                  <div className="bg-blue-100 rounded-full p-2 mr-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Market Position</h4>
-                    <p className="text-sm text-gray-600">8% market share with growth opportunity</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Market Trends Section */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Market Trend Analysis</h3>
-            <p className="font-medium">{analysisResults.marketTrends.overall}</p>
-            <p className="mt-2">Competitive Landscape: {analysisResults.marketTrends.competitiveLandscape}</p>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              {renderSeasonalTrendChart()}
-              {renderMarketShareChart()}
-            </div>
-          </div>
-          
-          {/* Financial Projections */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Financial Projections</h3>
-            
-            {renderProjectedRevenueChart()}
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <h4 className="font-medium text-gray-600 text-sm">Profit Margin</h4>
-                <div className="flex items-center mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${analysisResults.financialProjections.profitMargin.current}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {analysisResults.financialProjections.profitMargin.current}%
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Current</p>
-                
-                <div className="flex items-center mt-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                    <div 
-                      className="bg-green-600 h-2.5 rounded-full" 
-                      style={{ width: `${analysisResults.financialProjections.profitMargin.projected}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {analysisResults.financialProjections.profitMargin.projected}%
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Projected</p>
-                
-                <div className="flex items-center mt-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                    <div 
-                      className="bg-gray-500 h-2.5 rounded-full" 
-                      style={{ width: `${analysisResults.financialProjections.profitMargin.industry}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {analysisResults.financialProjections.profitMargin.industry}%
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Industry Average</p>
-              </div>
-              
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <h4 className="font-medium text-gray-600 text-sm">Break-Even Analysis</h4>
-                <div className="mt-2">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-gray-500">Fixed Costs (Monthly)</span>
-                    <span className="text-sm font-medium">${analysisResults.financialProjections.breakEvenAnalysis.fixedCosts.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-gray-500">Variable Cost Per Unit</span>
-                    <span className="text-sm font-medium">${analysisResults.financialProjections.breakEvenAnalysis.variableCostsPerUnit.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between mt-3 pt-3 border-t">
-                    <span className="text-sm font-medium text-gray-700">Break-Even Units</span>
-                    <span className="text-lg font-bold text-blue-700">{analysisResults.financialProjections.breakEvenAnalysis.breakEvenUnits}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <h4 className="font-medium text-gray-600 text-sm">Key Financial Insights</h4>
-                <ul className="mt-2 space-y-2">
-                  <li className="flex items-start">
-                    <svg className="w-4 h-4 text-green-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-                    </svg>
-                    <span className="text-sm">Cash flow positive by Month 3</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-4 h-4 text-green-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-                    </svg>
-                    <span className="text-sm">ROI on marketing improving by 15%</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-4 h-4 text-yellow-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                    </svg>
-                    <span className="text-sm">Watch inventory turnover ratio</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          
-          {/* Pricing Strategy */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Pricing Strategy</h3>
-            <div className="flex flex-wrap gap-4 mb-4">
-              <div className="bg-white p-3 rounded-lg shadow-sm min-w-[120px]">
-                <p className="text-sm text-gray-600">Current Average</p>
-                <p className="text-lg font-bold">{analysisResults.pricingStrategy.currentAverage}</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg shadow-sm min-w-[120px]">
-                <p className="text-sm text-gray-600">Recommended Price</p>
-                <p className="text-lg font-bold text-green-600">{analysisResults.pricingStrategy.recommendedPrice}</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg shadow-sm min-w-[120px]">
-                <p className="text-sm text-gray-600">Price Elasticity</p>
-                <p className="text-lg font-bold">{analysisResults.pricingStrategy.priceElasticity}</p>
-              </div>
-            </div>
-            
-            {renderCompetitorPricingChart()}
-            
-            <div className="mt-6">
-              <h4 className="font-medium mt-4">Pricing Recommendations:</h4>
-              <ul className="list-disc pl-5 mt-2 space-y-2">
-                {analysisResults.pricingStrategy.bundleOpportunities.map((item, index) => (
-                  <li key={index} className="text-gray-700">{item}</li>
-                ))}
-              </ul>
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mt-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Pro Tip:</strong> Implement the price increase gradually over 30-45 days while highlighting your quality differentiators. Consider a "loyalty price" for repeat customers.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Growth Opportunities */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Growth Opportunities</h3>
-            
+        )}
+        
+        {/* Navigation Tabs */}
+        <div className="flex border-b mb-6">
+          <button 
+            className={`py-2 px-4 font-medium ${activeTab === 'input' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('input')}
+          >
+            Business Input
+          </button>
+          <button 
+            className={`py-2 px-4 font-medium ${activeTab === 'results' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('results')}
+            disabled={!analysisResults}
+          >
+            Analysis Results
+          </button>
+        </div>
+        
+        {activeTab === 'input' && (
+          <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Business Name */}
               <div>
-                <h4 className="font-medium">Recommended Platforms</h4>
-                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
-                  <ul className="space-y-2">
-                    {analysisResults.growthOpportunities.platforms.map((platform, index) => (
-                      <li key={index} className="flex items-start">
-                        <svg className="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-                        </svg>
-                        <div>
-                          <span className="font-medium">{platform}</span>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {platform === 'Pinterest' ? 'Perfect for visual products with longer consideration cycle' : 
-                             platform === 'YouTube' ? 'Ideal for showcasing product details and tutorials' :
-                             platform === 'TikTok' ? 'Great for reaching younger demographics with trending content' :
-                             'Strong for visual storytelling and product showcases'}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Business Name
+                </label>
+                <input
+                  type="text"
+                  name="businessName"
+                  value={formData.businessName}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.businessName ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="Your Business Name"
+                />
+                {errors.businessName && (
+                  <p className="mt-1 text-sm text-red-500">{errors.businessName}</p>
+                )}
+              </div>
+              
+              {/* Product Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product Category
+                </label>
+                <select
+                  name="productCategory"
+                  value={formData.productCategory}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.productCategory ? 'border-red-500' : 'border-gray-300'}`}
+                >
+                  <option value="">Select a category</option>
+                  {productCategories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+                {errors.productCategory && (
+                  <p className="mt-1 text-sm text-red-500">{errors.productCategory}</p>
+                )}
+              </div>
+              
+              {/* Current Pricing */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Average Product Price (LKR)
+                </label>
+                <input
+                  type="text"
+                  name="currentPricing"
+                  value={formData.currentPricing}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.currentPricing ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="5000"
+                />
+                {errors.currentPricing && (
+                  <p className="mt-1 text-sm text-red-500">{errors.currentPricing}</p>
+                )}
+              </div>
+              
+              {/* Monthly Revenue */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Monthly Revenue (LKR)
+                </label>
+                <input
+                  type="text"
+                  name="monthlyRevenue"
+                  value={formData.monthlyRevenue}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.monthlyRevenue ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="100000"
+                />
+                {errors.monthlyRevenue && (
+                  <p className="mt-1 text-sm text-red-500">{errors.monthlyRevenue}</p>
+                )}
+              </div>
+              
+              {/* Primary Goal */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Primary Business Goal
+                </label>
+                <select
+                  name="primaryGoal"
+                  value={formData.primaryGoal}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.primaryGoal ? 'border-red-500' : 'border-gray-300'}`}
+                >
+                  <option value="">Select your primary goal</option>
+                  {businessGoals.map(goal => (
+                    <option key={goal} value={goal}>{goal}</option>
+                  ))}
+                </select>
+                {errors.primaryGoal && (
+                  <p className="mt-1 text-sm text-red-500">{errors.primaryGoal}</p>
+                )}
+              </div>
+              
+              {/* Target Market */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Target Market Description
+                </label>
+                <input
+                  type="text"
+                  name="targetMarket"
+                  value={formData.targetMarket}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.targetMarket ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="e.g., Urban Colombo, tourists, export markets"
+                />
+                {errors.targetMarket && (
+                  <p className="mt-1 text-sm text-red-500">{errors.targetMarket}</p>
+                )}
+              </div>
+              
+              {/* Competitor URLs */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Competitor URLs (Optional)
+                </label>
+                <textarea
+                  name="competitorUrls"
+                  value={formData.competitorUrls}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Enter competitor websites separated by commas"
+                  rows={2}
+                />
+              </div>
+              
+              {/* Platforms Used */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Platforms Currently Using
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {availablePlatforms.map(platform => (
+                    <div key={platform} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={platform}
+                        checked={formData.platformsUsed.includes(platform)}
+                        onChange={() => handlePlatformChange(platform)}
+                        className="mr-2"
+                      />
+                      <label htmlFor={platform} className="text-sm">{platform}</label>
+                    </div>
+                  ))}
                 </div>
-                
-                <h4 className="font-medium mt-4">Customer Segments to Target</h4>
-                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
-                  <ul className="space-y-2">
-                    {analysisResults.growthOpportunities.customerSegments.map((segment, index) => (
-                      <li key={index} className="flex items-start">
-                        <svg className="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
-                        </svg>
-                        <div>
-                          <span className="font-medium">{segment}</span>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {segment.includes('millennial') ? 'Values sustainability and authenticity, 38% higher average order value' : 
-                             segment.includes('Corporate') ? 'Consistent B2B opportunity with higher volume orders during Q4' :
-                             'Willing to pay premium prices for exceptional quality and craftsmanship'}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                {errors.platformsUsed && (
+                  <p className="mt-1 text-sm text-red-500">{errors.platformsUsed}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-8 text-center">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Analyzing...' : 'Generate Business Insights'}
+              </button>
+            </div>
+          </form>
+        )}
+        
+        {activeTab === 'results' && analysisResults && (
+          <div className="space-y-8">
+            {/* Summary Section */}
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+              <h3 className="text-xl font-semibold text-blue-800 mb-2">Executive Summary</h3>
+              <p className="mb-3">Based on your input for <strong>{formData.businessName}</strong> in the <strong>{formData.productCategory}</strong> category, we've identified the following key insights:</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
+                  <div className="flex">
+                    <div className="bg-blue-100 rounded-full p-2 mr-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Growth Potential</h4>
+                      <p className="text-sm text-gray-600">{analysisResults.summaryMetrics.growthPotential}</p>
+                    </div>
+                  </div>
                 </div>
-                
-                <h4 className="font-medium mt-4">Market Expansion Opportunity</h4>
-                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
-                  <p className="text-gray-700">{analysisResults.growthOpportunities.marketExpansion}</p>
+                <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
+                  <div className="flex">
+                    <div className="bg-blue-100 rounded-full p-2 mr-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Primary Challenge</h4>
+                      <p className="text-sm text-gray-600">{analysisResults.summaryMetrics.primaryChallenge}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
+                  <div className="flex">
+                    <div className="bg-blue-100 rounded-full p-2 mr-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Top Recommendation</h4>
+                      <p className="text-sm text-gray-600">{analysisResults.summaryMetrics.topRecommendation}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
+                  <div className="flex">
+                    <div className="bg-blue-100 rounded-full p-2 mr-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Market Position</h4>
+                      <p className="text-sm text-gray-600">{analysisResults.summaryMetrics.marketPosition}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Market Trends Section - Updated with clearer layout */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">වෙළඳපොළ ප්‍රවණතා විශ්ලේෂණය (Market Trends)</h3>
+              
+              <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+                <p className="font-medium text-gray-800">{analysisResults.marketTrends.overall}</p>
+                <p className="mt-2 text-gray-700">තරඟකාරී දර්ශනය: {analysisResults.marketTrends.competitiveLandscape}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {renderSeasonalTrendChart()}
+                {renderMarketShareChart()}
+              </div>
+            </div>
+            
+            {/* Financial Projections - Redesigned for clarity */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-blue-800">මූල්‍ය පුරෝකථන (Financial Projections)</h3>
+                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  මාස 6
                 </div>
               </div>
               
-              <div>
-                {renderChannelPerformanceChart()}
+              <div className="grid grid-cols-1 gap-6">
+                {renderProjectedRevenueChart()}
                 
-                <h4 className="font-medium mt-4">Keyword Opportunities</h4>
-                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
-                  <div className="space-y-2">
-                    {analysisResults.growthOpportunities.keywordOpportunities.map((keyword, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <div>
-                          <span className="font-medium text-sm">"{keyword.keyword}"</span>
-                          <div className="flex items-center mt-1">
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded mr-2">
-                              Vol: {keyword.volume}
-                            </span>
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                              Comp: {keyword.competition}
-                            </span>
-                          </div>
-                        </div>
-                        <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  {renderProfitMargins()}
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-medium text-gray-700 text-sm mb-2">සමච්ඡේදන විශ්ලේෂණය (Break-Even)</h4>
+                    <div className="mt-2">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-xs text-gray-500">ස්ථාවර පිරිවැය (Fixed Costs):</span>
+                        <span className="text-sm font-medium">LKR {(analysisResults.financialProjections.breakEvenAnalysis.fixedCosts/1000).toFixed(0)}K</span>
+                      </div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-xs text-gray-500">ඒකක පිරිවැය (Unit Cost):</span>
+                        <span className="text-sm font-medium">LKR {analysisResults.financialProjections.breakEvenAnalysis.variableCostsPerUnit.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between mt-3 pt-3 border-t">
+                        <span className="text-sm font-medium text-gray-700">සමච්ඡේදන ඒකක:</span>
+                        <span className="text-lg font-bold text-blue-700">{analysisResults.financialProjections.breakEvenAnalysis.breakEvenUnits} units</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-medium text-gray-700 text-sm mb-2">ප්‍රධාන මූල්‍ය අන්තර්දෘෂ්ටි (Key Insights)</h4>
+                    <ul className="mt-2 space-y-2">
+                      <li className="flex items-start">
+                        <svg className="w-4 h-4 text-green-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
                         </svg>
-                      </div>
-                    ))}
+                        <span className="text-sm">මාස 3න් ධනාත්මක මුදල් ප්‍රවාහය</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="w-4 h-4 text-green-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                        </svg>
+                        <span className="text-sm">අලෙවිකරණයෙන් 15% ආයෝජන ප්‍රතිලාභ</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="w-4 h-4 text-yellow-500 mt-0.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                        </svg>
+                        <span className="text-sm">තොග පිරිවැටුම් අනුපාතය නිරීක්ෂණය කරන්න</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
-                
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Growth Insight:</strong> Focus on email marketing has the highest ROI potential with a 3.2% conversion rate. Create targeted campaigns for your top customer segments using recommended keywords.
+              </div>
+            </div>
+            
+            {/* Pricing Strategy - Simplified for clarity */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-xl font-semibold text-blue-800 mb-3">මිල උපාය මාර්ගය (Pricing Strategy)</h3>
+              
+              <div className="flex flex-wrap gap-4 mb-4 justify-center">
+                <div className="bg-white p-4 rounded-lg shadow-sm min-w-[130px] flex-1 text-center">
+                  <p className="text-sm text-gray-600">වත්මන් මිල</p>
+                  <p className="text-lg font-bold text-blue-600">{analysisResults.pricingStrategy.currentAverage}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm min-w-[130px] flex-1 text-center">
+                  <p className="text-sm text-gray-600">නිර්දේශිත මිල</p>
+                  <p className="text-lg font-bold text-green-600">{analysisResults.pricingStrategy.recommendedPrice}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm min-w-[130px] flex-1 text-center">
+                  <p className="text-sm text-gray-600">මිල ප්‍රත්‍යස්ථතාව</p>
+                  <p className="text-lg font-bold">{analysisResults.pricingStrategy.priceElasticity}</p>
+                </div>
+              </div>
+              
+              {renderCompetitorPricingChart()}
+              
+              <div className="bg-white p-5 rounded-lg shadow-sm mt-6">
+                <h4 className="text-lg font-medium mb-2">මිල නිර්දේශ (Pricing Recommendations):</h4>
+                <ul className="list-disc pl-5 mt-2 space-y-3">
+                  {analysisResults.pricingStrategy.bundleOpportunities.map((item, index) => (
+                    <li key={index} className="text-gray-700">{item}</li>
+                  ))}
+                </ul>
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mt-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>උපදෙස:</strong> දින 30-45 අතර කාලයක් තුළ මිල වැඩි කිරීම ක්‍රමයෙන් සිදු කරන්න. ඔබගේ නිෂ්පාදනයේ 
+                    විශේෂත්වය පැහැදිලි කරමින් මිල වැඩිකිරීම සිදු කරන්න.
                   </p>
                 </div>
               </div>
             </div>
-          </div>
-          
-          {/* Risk Alerts */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Risk Alerts & Mitigation</h3>
             
-            {analysisResults.risks.map((risk, index) => (
-              <div key={index} className="mb-4 border-l-4 pl-3 py-3 bg-white rounded-r-lg shadow-sm" style={{
-                borderColor: risk.severity === 'High' ? '#ef4444' : 
-                             risk.severity === 'Medium' ? '#f59e0b' : '#10b981'
-              }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                    risk.severity === 'High' ? 'bg-red-100 text-red-800' : 
-                    risk.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {risk.severity}
-                  </span>
-                  <h4 className="font-medium">{risk.description}</h4>
-                </div>
-                <p className="text-gray-700 text-sm">
-                  <strong>Potential Impact:</strong> {risk.impact}
-                </p>
-                <p className="text-gray-700 text-sm mt-1">
-                  <strong>Mitigation Strategy:</strong> {risk.mitigation}
-                </p>
-              </div>
-            ))}
-          </div>
-          
-          {/* Action Plan */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Prioritized Action Plan</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <h4 className="flex items-center font-medium text-blue-900">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
-                  </svg>
-                  Immediate Actions (Next 30 Days)
-                </h4>
-                <div className="mt-2 bg-white rounded-lg p-3 shadow-sm">
+            {/* Action Plan - Simplified with clearer sections */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="text-xl font-semibold text-blue-800 mb-4">ක්‍රියාකාරී සැලැස්ම (Action Plan)</h3>
+              
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h4 className="flex items-center font-medium text-blue-900 mb-3">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
+                    </svg>
+                    ඉක්මන් ක්‍රියාමාර්ග (දින 30 ඇතුළත)
+                  </h4>
                   <ol className="list-decimal pl-5 space-y-2">
                     {analysisResults.actionPlan.immediate.map((action, index) => (
                       <li key={index} className="text-gray-700">{action}</li>
                     ))}
                   </ol>
                 </div>
-              </div>
-              
-              <div>
-                <h4 className="flex items-center font-medium text-blue-900">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
-                  </svg>
-                  Short-Term Actions (1-3 Months)
-                </h4>
-                <div className="mt-2 bg-white rounded-lg p-3 shadow-sm">
+                
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h4 className="flex items-center font-medium text-blue-900 mb-3">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
+                    </svg>
+                    කෙටි කාලීන ක්‍රියාමාර්ග (1-3 මාස)
+                  </h4>
                   <ol className="list-decimal pl-5 space-y-2">
                     {analysisResults.actionPlan.shortTerm.map((action, index) => (
                       <li key={index} className="text-gray-700">{action}</li>
                     ))}
                   </ol>
                 </div>
-              </div>
-              
-              <div>
-                <h4 className="flex items-center font-medium text-blue-900">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
-                  </svg>
-                  Long-Term Strategy (3-6 Months)
-                </h4>
-                <div className="mt-2 bg-white rounded-lg p-3 shadow-sm">
+                
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <h4 className="flex items-center font-medium text-blue-900 mb-3">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
+                    </svg>
+                    දිගු කාලීන උපාය මාර්ග (3-6 මාස)
+                  </h4>
                   <ol className="list-decimal pl-5 space-y-2">
                     {analysisResults.actionPlan.longTerm.map((action, index) => (
                       <li key={index} className="text-gray-700">{action}</li>
@@ -1040,22 +1211,8 @@ const AIBusinessAdvisorTool = () => {
               </div>
             </div>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="flex justify-center gap-4 mt-8">
-            <button 
-              className="px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-md hover:bg-blue-50"
-              onClick={() => setActiveTab('input')}
-            >
-              Edit Business Info
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
-              Download Full Report
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   );
 };
