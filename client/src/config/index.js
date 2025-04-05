@@ -57,71 +57,143 @@ export const addProductFormElements = [
     componentType: "input",
     type: "text",
     placeholder: "Enter product title",
+    required: true,
+    helpText: "A descriptive title helps customers find your product"
   },
   {
     label: "Description",
     name: "description",
     componentType: "textarea",
     placeholder: "Enter product description",
+    required: true,
+    helpText: "Describe your product in detail (at least 10 characters)"
   },
   {
     label: "Category",
     name: "category",
     componentType: "select",
+    required: true,
+    placeholder: "Select product category",
+    helpText: "Choose the primary category for your product",
     options: [
       { id: "men", label: "Men" },
       { id: "women", label: "Women" },
       { id: "kids", label: "Kids" },
       { id: "accessories", label: "Accessories" },
       { id: "footwear", label: "Footwear" },
+      { id: "agriculture", label: "Agriculture" },
+      { id: "healthcare", label: "Healthcare" },
+      { id: "handcraft", label: "Handcraft" },
     ],
   },
   {
-    label: "Brand",
-    name: "brand",
+    label: "Subcategory",
+    name: "subcategory",
     componentType: "select",
-    options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
-    ],
+    required: true,
+    placeholder: "Select product subcategory",
+    helpText: "Choose a specific subcategory for better classification",
+    options: [], // This will be dynamically populated
   },
   {
-    label: "Price",
+    label: "Price (LKR)",
     name: "price",
     componentType: "input",
     type: "number",
-    placeholder: "Enter product price",
+    min: "0", // Enforce minimum value of 0
+    required: true,
+    placeholder: "Enter product price in LKR",
+    helpText: "Must be a positive number (minimum LKR 0)"
   },
   {
-    label: "Sale Price",
+    label: "Sale Price (LKR)",
     name: "salePrice",
     componentType: "input",
     type: "number",
-    placeholder: "Enter sale price (optional)",
+    min: "0", // Enforce minimum value of 0
+    placeholder: "Enter sale price in LKR (optional)",
+    helpText: "If on sale, must be positive and less than regular price"
   },
   {
     label: "Total Stock",
     name: "totalStock",
     componentType: "input",
     type: "number",
+    min: "0", // Enforce minimum value of 0
+    required: true,
     placeholder: "Enter total stock",
+    helpText: "Number of items available for sale (minimum 0)"
   },
 ];
 
+export const subcategoryOptionsMap = {
+  men: [
+    { id: "clothes-men", label: "Men's Clothes" },
+  ],
+  women: [
+    { id: "clothes-women", label: "Women's Clothes" },
+  ],
+  kids: [
+    { id: "clothes-kids", label: "Kids' Clothes" },
+  ],
+  electronics: [
+    { id: "electronics-mobiles", label: "Mobiles" },
+    { id: "electronics-laptops", label: "Laptops" },
+    { id: "electronics-accessories", label: "Electronics Accessories" },
+  ],
+  agriculture: [
+    { id: "agriculture-organic", label: "Organic Products" },
+    { id: "agriculture-seeds", label: "Seeds & Seedlings" },
+    { id: "agriculture-tools", label: "Farming Tools" },
+    { id: "agriculture-fertilizers", label: "Natural Fertilizers" },
+  ],
+  healthcare: [
+    { id: "healthcare-herbal", label: "Herbal Remedies" },
+    { id: "healthcare-wellness", label: "Wellness Products" },
+    { id: "healthcare-personal", label: "Personal Care" },
+    { id: "healthcare-hygiene", label: "Hygiene Products" },
+  ],
+  handcraft: [
+    { id: "handcraft-pottery", label: "Pottery & Ceramics" },
+    { id: "handcraft-textiles", label: "Handwoven Textiles" },
+    { id: "handcraft-jewelry", label: "Handmade Jewelry" },
+    { id: "handcraft-decor", label: "Home Decor Items" },
+  ],
+  accessories: [
+    { id: "accessories-watches", label: "Watches" },
+    { id: "accessories-bags", label: "Bags" },
+  ],
+  footwear: [
+    { id: "footwear-casual", label: "Casual Shoes" },
+    { id: "footwear-formal", label: "Formal Shoes" },
+  ],
+};
+
 export const shoppingViewHeaderMenuItems = [
   {
-    id: "home",
+    id: "landing",
     label: "Home",
+    path: "/shop/land",
+  },
+  {
+    id: "home",
+    label: "Marketplace",
     path: "/shop/home",
   },
   {
     id: "products",
     label: "Products",
     path: "/shop/listing",
+  },
+  {
+    id:"ai-tool",
+    label:"AI Tool",
+    path:"/shop/ai",
+  },
+  {
+    id:"jobs",
+    label:"Jobs",
+    path:"/shop/jobs",
   },
   /*{
     id: "men",
@@ -161,6 +233,9 @@ export const categoryOptionsMap = {
   kids: "Kids",
   accessories: "Accessories",
   footwear: "Footwear",
+  agriculture: "Agriculture",
+  healthcare: "Healthcare",
+  handcraft: "Handcraft",
 };
 
 export const brandOptionsMap = {
@@ -179,14 +254,36 @@ export const filterOptions = {
     { id: "kids", label: "Kids" },
     { id: "accessories", label: "Accessories" },
     { id: "footwear", label: "Footwear" },
+    { id: "agriculture", label: "Agriculture" },
+    { id: "healthcare", label: "Healthcare" },
+    { id: "handcraft", label: "Handcraft" },
   ],
-  brand: [
-    { id: "nike", label: "Nike" },
-    { id: "adidas", label: "Adidas" },
-    { id: "puma", label: "Puma" },
-    { id: "levi", label: "Levi's" },
-    { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+  subcategory: [
+    // Existing subcategories
+    { id: "clothes-men", label: "Men's Clothes" },
+    { id: "clothes-women", label: "Women's Clothes" },
+    { id: "clothes-kids", label: "Kids' Clothes" },
+    { id: "electronics-mobiles", label: "Mobiles" },
+    { id: "electronics-laptops", label: "Laptops" },
+    { id: "electronics-accessories", label: "Electronics Accessories" },
+    
+    // Agriculture subcategories
+    { id: "agriculture-organic", label: "Organic Products" },
+    { id: "agriculture-seeds", label: "Seeds & Seedlings" },
+    { id: "agriculture-tools", label: "Farming Tools" },
+    { id: "agriculture-fertilizers", label: "Natural Fertilizers" },
+    
+    // Healthcare subcategories
+    { id: "healthcare-herbal", label: "Herbal Remedies" },
+    { id: "healthcare-wellness", label: "Wellness Products" },
+    { id: "healthcare-personal", label: "Personal Care" },
+    { id: "healthcare-hygiene", label: "Hygiene Products" },
+    
+    // Handcraft subcategories
+    { id: "handcraft-pottery", label: "Pottery & Ceramics" },
+    { id: "handcraft-textiles", label: "Handwoven Textiles" },
+    { id: "handcraft-jewelry", label: "Handmade Jewelry" },
+    { id: "handcraft-decor", label: "Home Decor Items" },
   ],
 };
 

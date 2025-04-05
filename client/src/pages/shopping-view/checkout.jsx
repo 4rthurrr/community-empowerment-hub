@@ -72,7 +72,7 @@ function ShoppingCheckout() {
         notes: currentSelectedAddress?.notes,
       },
       orderStatus: "pending",
-      paymentMethod: "paypal",
+      paymentMethod: "dummy",
       paymentStatus: "pending",
       totalAmount: totalCartAmount,
       orderDate: new Date(),
@@ -91,9 +91,9 @@ function ShoppingCheckout() {
     });
   }
 
-  if (approvalURL) {
-    window.location.href = approvalURL;
-  }
+  // if (approvalURL) {
+  //   window.location.href = approvalURL;
+  // }
 
   return (
     <div className="flex flex-col">
@@ -114,14 +114,14 @@ function ShoppingCheckout() {
           <div className="mt-8 space-y-4">
             <div className="flex justify-between">
               <span className="font-bold">Total</span>
-              <span className="font-bold">${totalCartAmount}</span>
+              <span className="font-bold">LKR {totalCartAmount}</span>
             </div>
           </div>
           <div className="mt-4 w-full">
             <Button onClick={handleInitiatePaypalPayment} className="w-full">
               {isPaymentStart
-                ? "Processing Paypal Payment..."
-                : "Checkout with Paypal"}
+                ? "Processing Payment..."
+                : "Checkout"}
             </Button>
           </div>
         </div>
