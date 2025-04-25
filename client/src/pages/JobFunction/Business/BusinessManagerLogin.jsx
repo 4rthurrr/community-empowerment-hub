@@ -1,34 +1,47 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+import { useState } from "react";
+import axios from "axios";
+import "./business.css";
 
 function BusinessManagerLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setInputs((prevInputs) => ({
+      ...prevInputs,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch("http://localhost:5000/job/businessManager/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await axios.post(
+        "http://localhost:5000/job/businessManager/login",
+        {
+          email: inputs.email,
+          password: inputs.password,
+        }
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Login successful");
-        localStorage.setItem("LoginManagerID", data.businessManager._id);
+      if (response.data.success) {
+        // Store the manager ID in localStorage
+        localStorage.setItem("LoginManagerID", response.data.manager.managerID);
+        localStorage.setItem("LoginManagerName", response.data.manager.fullName);
+        
+        console.log("Manager ID stored:", response.data.manager.managerID);
+        
+        alert("Login successful!");
         window.location.href = "/jobPostDetails";
       } else {
-        alert(data.message || "Invalid email or password");
+        alert(response.data.message || "Login failed. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      alert("An error occurred during login");
+      console.error("Login error:", error);
+      alert("Login failed. Please try again.");
     }
   };
 
@@ -49,7 +62,7 @@ function BusinessManagerLogin() {
               <p className="job_seeker_auth_topic">Sign in to your account</p>
               <p className="job_seeker_auth_sub_topic">Manager Panel</p>
             </div>
-            <form className="job_seeker_auth_from" onSubmit={handleLogin}>
+            <form className="job_seeker_auth_from" onSubmit={handleSubmit}>
               <div className="job_seeker_auth_from_section">
                 <label className="job_seeker_auth_from_lable">Email</label>
                 <input
@@ -59,8 +72,8 @@ function BusinessManagerLogin() {
                   className="job_seeker_auth_from_input"
                   required
                   placeholder="Enter Your Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={inputs.email}
+                  onChange={handleChange}
                 />
               </div>
               <div className="job_seeker_auth_from_section">
@@ -72,8 +85,8 @@ function BusinessManagerLogin() {
                   name="password"
                   className="job_seeker_auth_from_input"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={inputs.password}
+                  onChange={handleChange}
                 />
               </div>
               <button type="submit" className="job_seeker_auth_from_btn">Sign In</button>

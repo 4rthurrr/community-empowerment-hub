@@ -1,11 +1,13 @@
-// eslint-disable-next-line no-unused-vars
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./business.css";
+
 function AddJobPost() {
+  // Improved initial state with empty string values for all fields
   const [inputs, setInputs] = useState({
     ownerID: "",
     postID: "",
+    title: "",
     industry: "",
     location: "",
     experienceLevel: "",
@@ -13,6 +15,7 @@ function AddJobPost() {
     description: "",
     companyName: "",
   });
+
   const generateID = () => {
     const prefix = "PID ";
     const randomNumber = Math.floor(100000000 + Math.random() * 900000000);
@@ -20,20 +23,17 @@ function AddJobPost() {
   };
 
   useEffect(() => {
-    setInputs((prevInputs) => ({
+    // Set postID and ownerID when component mounts
+    const postID = generateID();
+    const ownerID = localStorage.getItem("LoginManagerID") || "";
+    
+    setInputs(prevInputs => ({
       ...prevInputs,
-      postID: generateID(),
+      postID,
+      ownerID,
     }));
   }, []);
-  useEffect(() => {
-    const ownerID = localStorage.getItem("LoginManagerID");
-    if (ownerID) {
-      setInputs((prevInputs) => ({
-        ...prevInputs,
-        ownerID: ownerID,
-      }));
-    }
-  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInputs((prevInputs) => ({
@@ -44,25 +44,30 @@ function AddJobPost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log(inputs);
-    await sendRequest();
-    window.alert("Post Upload successfully!");
-    window.location.href = "./jobPostDetails";
+    
+    // Validate required fields before submission
+    if (!inputs.ownerID) {
+      alert("Please login as a manager first.");
+      return;
+    }
+    
+    try {
+      console.log("Submitting job post data:", inputs); // Add logging to debug
+      
+      const response = await axios.post("http://localhost:5000/job/jobpost", inputs);
+
+      if (response.status === 200) {
+        alert("Job post added successfully!");
+        window.location.href = "/jobPostDetails";
+      }
+    } catch (error) {
+      console.error("Error submitting job post:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error adding job post. Please try again.");
+    }
   };
-  const sendRequest = async () => {
-    await axios.post("http://localhost:5000/job/jobpost", {
-      ownerID: inputs.ownerID,
-      postID: inputs.postID,
-      title: inputs.title,
-      industry: inputs.industry,
-      location: inputs.location,
-      experienceLevel: inputs.experienceLevel,
-      applicationCloseDate: inputs.applicationCloseDate,
-      description: inputs.description,
-      companyName: inputs.companyName,
-    });
-  };
+
   const today = new Date().toISOString().split("T")[0];
+
   return (
     <div>
       <div className="admin_nav_bar_job">
@@ -90,6 +95,11 @@ function AddJobPost() {
       </div>
       <div>
         <p className="admin_from_job_function_topic">Upload New Job Post</p>
+        {!inputs.ownerID && (
+          <div className="alert alert-warning" role="alert">
+            Please login as a manager first to create job posts.
+          </div>
+        )}
         <form className="admin_from_job_function" onSubmit={handleSubmit}>
           <div className="job_seeker_auth_from_section">
             <label className="job_seeker_auth_from_lable">Post ID</label>

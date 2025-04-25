@@ -57,20 +57,23 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-
-  async () => {
-    const response = await axios.get(
-      "http://localhost:5000/api/auth/check-auth",
-      {
-        withCredentials: true,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
-    );
-
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/auth/check-auth",
+        {
+          withCredentials: true,
+          headers: {
+            "Cache-Control":
+              "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.log("Auth check failed:", error);
+      return rejectWithValue(error.response?.data || { success: false, message: "Authentication failed" });
+    }
   }
 );
 
@@ -78,7 +81,13 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: (state, action) => {},
+    clearAuthErrors: (state) => {
+      state.error = null;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = !!action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -131,5 +140,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser } = authSlice.actions;
+export const { setUser, clearAuthErrors } = authSlice.actions;
 export default authSlice.reducer;
