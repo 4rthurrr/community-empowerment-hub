@@ -4,7 +4,7 @@ import { loginFormControls } from "@/config";
 import { loginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const initialState = {
   email: "",
@@ -13,24 +13,64 @@ const initialState = {
 
 function AuthLogin() {
   const [formData, setFormData] = useState(initialState);
+  const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Validation function
+  const validateForm = () => {
+    let tempErrors = {};
+    let isValid = true;
+
+    // Email validation
+    if (!formData.email.trim()) {
+      tempErrors.email = "Email is required";
+      isValid = false;
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(formData.email)) {
+      tempErrors.email = "Invalid email address";
+      isValid = false;
+    }
+
+    // Password validation
+    if (!formData.password) {
+      tempErrors.password = "Password is required";
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      tempErrors.password = "Password must be at least 8 characters";
+      isValid = false;
+    }
+
+    setErrors(tempErrors);
+    return isValid;
+  };
 
   function onSubmit(event) {
     event.preventDefault();
 
-    dispatch(loginUser(formData)).then((data) => {
-      if (data?.payload?.success) {
-        toast({
-          title: data?.payload?.message,
-        });
-      } else {
-        toast({
-          title: data?.payload?.message,
-          variant: "destructive",
-        });
-      }
-    });
+    // Validate form before submission
+    if (validateForm()) {
+      dispatch(loginUser(formData)).then((data) => {
+        if (data?.payload?.success) {
+          toast({
+            title: data?.payload?.message,
+          });
+          // Redirect to dashboard or home page after successful login
+          navigate("/shop/land");
+        } else {
+          toast({
+            title: data?.payload?.message,
+            variant: "destructive",
+          });
+        }
+      });
+    } else {
+      // Display validation error toast
+      toast({
+        title: "Please fix the form errors",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
@@ -53,6 +93,7 @@ function AuthLogin() {
         formControls={loginFormControls}
         buttonText={"Sign In"}
         formData={formData}
+        formErrors={errors}  // Pass the errors to CommonForm
         setFormData={setFormData}
         onSubmit={onSubmit}
       />

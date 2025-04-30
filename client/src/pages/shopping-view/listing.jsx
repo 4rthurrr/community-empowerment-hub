@@ -51,6 +51,7 @@ function ShoppingListing() {
   const { toast } = useToast();
 
   const categorySearchParam = searchParams.get("category");
+  const subcategorySearchParam = searchParams.get("subcategory");
 
   function handleSort(value) {
     setSort(value);
@@ -122,8 +123,15 @@ function ShoppingListing() {
 
   useEffect(() => {
     setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
-  }, [categorySearchParam]);
+    
+    // Check for subcategory param and apply it to filters
+    if (subcategorySearchParam) {
+      setFilters({ subcategory: [subcategorySearchParam] });
+    } else {
+      // Load existing filters or create empty object
+      setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
+    }
+  }, [categorySearchParam, subcategorySearchParam]);
 
   useEffect(() => {
     if (filters && Object.keys(filters).length > 0) {

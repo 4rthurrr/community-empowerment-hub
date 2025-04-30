@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/admin-view/dashboard";
 import AdminProducts from "./pages/admin-view/products";
 import AdminOrders from "./pages/admin-view/orders";
 import AdminFeatures from "./pages/admin-view/features";
+import AdminReports from "./pages/admin-view/reports"; // Add this import
 import ShoppingLayout from "./components/shopping-view/layout";
 import NotFound from "./pages/not-found";
 import ShoppingHome from "./pages/shopping-view/home";
@@ -19,9 +20,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
-import PaypalReturnPage from "./pages/shopping-view/paypal-return";
+// import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+import LandingPage from "./pages/shopping-view/landing";
+import AIBusinessAdvisorTool from "./pages/shopping-view/ai-tool";
+import JobPortal from "./pages/shopping-view/jobportal";
 
 {
   /* JOB FUNCTION ROUTE */
@@ -104,6 +108,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="reports" element={<AdminReports />} /> {/* Add this route */}
           <Route path="features" element={<AdminFeatures />} />
         </Route>
         <Route
@@ -114,11 +119,14 @@ function App() {
             </CheckAuth>
           }
         >
+          <Route path="land" element={<LandingPage />} />
+          <Route path="ai" element={<AIBusinessAdvisorTool />} />
           <Route path="home" element={<ShoppingHome />} />
+          <Route path="jobs" element={<JobPortal />} />
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
-          <Route path="paypal-return" element={<PaypalReturnPage />} />
+          {/* <Route path="paypal-return" element={<PaypalReturnPage />} /> */}
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
         </Route>

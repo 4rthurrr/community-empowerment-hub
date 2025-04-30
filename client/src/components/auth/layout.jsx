@@ -11,6 +11,10 @@ function AuthLayout() {
             Welcome to 
             Community Empowerment
             Hub
+            <p className="text-lg text-gray-300 mt-2 font-medium">
+            Connecting communities with opportunities for growth, skills, and economic independence
+          </p>
+            
           </h1>
         </div>
       </div>
