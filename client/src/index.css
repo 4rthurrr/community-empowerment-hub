@@ -65,5 +65,19 @@
   font-weight: bold;
   background: linear-gradient(to right, #3b82f6, #a855f7, #ef4444);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.testimonial-carousel:hover .animate-carousel {
+  animation-play-state: paused;
 }
