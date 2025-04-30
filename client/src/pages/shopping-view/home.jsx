@@ -6,7 +6,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CloudLightning,
-  Heater,
   Images,
   Leaf,
   Heart,
