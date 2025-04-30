@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AlertCircle, Camera, Check, Edit, Lock, UserCircle, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Trash2 } from "lucide-react";
 
 function ProfileSettings() {
   const { user } = useSelector((state) => state.auth);
@@ -633,15 +634,31 @@ function ProfileSettings() {
               <Separator className="my-6" />
               
               <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
-              
-              <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+  <Button 
+    variant="default" 
+    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
+  >
+    <Download className="mr-2 h-4 w-4" />
+    Download Personal Data
+  </Button>
+
+  <Button 
+    variant="destructive" 
+    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white hover:text-white"
+  >
+    <Trash2 className="mr-2 h-4 w-4" />
+    Deactivate Account
+  </Button>
+</div>
+              {/* <div className="space-y-4">
                 <button className="text-sm text-blue-600 hover:underline">
                   Download Personal Data
                 </button>
                 <button className="text-sm text-red-600 hover:underline">
                   Deactivate Account
                 </button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
