@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Trash2 } from "lucide-react";
 
+
 function ProfileSettings() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -36,6 +37,7 @@ function ProfileSettings() {
     newPassword: "",
     confirmPassword: "",
   });
+  
   
   // State for notification preferences
   const [notificationSettings, setNotificationSettings] = useState({
