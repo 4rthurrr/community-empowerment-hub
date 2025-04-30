@@ -129,11 +129,7 @@ function ShoppingCheckout() {
           <div className="mt-4 w-full">
             <Button onClick={handleInitiateCheckout} className="w-full">
               {isPaymentStart
-<<<<<<< HEAD
-                ? "Processing Order..."
-=======
                 ? "Processing Payment..."
->>>>>>> main
                 : "Checkout"}
             </Button>
           </div>

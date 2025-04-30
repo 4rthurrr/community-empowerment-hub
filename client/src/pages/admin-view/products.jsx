@@ -240,8 +240,6 @@ function AdminProducts() {
       subcategory: "",
     });
     setSubcategoryOptions(subcategoryOptions);
-<<<<<<< HEAD
-=======
     
     // Clear subcategory error when category changes
     setFormErrors({
@@ -279,7 +277,6 @@ function AdminProducts() {
         [name]: "",
       });
     }
->>>>>>> main
   }
 
   useEffect(() => {
@@ -292,10 +289,6 @@ function AdminProducts() {
       setSubcategoryOptions(subcategoryOptions);
     }
   }, [formData.category]);
-<<<<<<< HEAD
-
-  console.log(formData, "productList");
-=======
   
   // When editing a product, pre-validate the form
   useEffect(() => {
@@ -303,7 +296,6 @@ function AdminProducts() {
       validateForm();
     }
   }, [currentEditedId, formData]);
->>>>>>> main
 
   return (
     <Fragment>
@@ -397,10 +389,6 @@ function AdminProducts() {
             <CommonForm
               onSubmit={onSubmit}
               formData={formData}
-<<<<<<< HEAD
-              setFormData={setFormData}
-              buttonText={currentEditedId !== null ? "Edit" : "Add"}
-=======
               setFormData={(data) => {
                 // For tracking individual field changes
                 const changedField = Object.keys(data).find(key => data[key] !== formData[key]);
@@ -412,7 +400,6 @@ function AdminProducts() {
               }}
               formErrors={formErrors}
               buttonText={currentEditedId !== null ? "Update Product" : "Create Product"}
->>>>>>> main
               formControls={addProductFormElements.map((element) => {
                 if (element.name === "subcategory") {
                   return {
@@ -428,11 +415,7 @@ function AdminProducts() {
                 }
                 return element;
               })}
-<<<<<<< HEAD
-              isBtnDisabled={!isFormValid()}
-=======
               isBtnDisabled={!isFormValid() || imageLoadingState || (!currentEditedId && !uploadedImageUrl)}
->>>>>>> main
             />
           </div>
         </SheetContent>

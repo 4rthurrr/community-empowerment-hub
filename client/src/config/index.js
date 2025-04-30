@@ -76,10 +76,6 @@ export const addProductFormElements = [
     placeholder: "Select product category",
     helpText: "Choose the primary category for your product",
     options: [
-<<<<<<< HEAD
-      { id: "clothes", label: "Clothes" },
-      { id: "electronics", label: "Electronics" },
-=======
       { id: "men", label: "Men" },
       { id: "women", label: "Women" },
       { id: "kids", label: "Kids" },
@@ -88,19 +84,15 @@ export const addProductFormElements = [
       { id: "agriculture", label: "Agriculture" },
       { id: "healthcare", label: "Healthcare" },
       { id: "handcraft", label: "Handcraft" },
->>>>>>> main
     ],
   },
   {
     label: "Subcategory",
     name: "subcategory",
     componentType: "select",
-<<<<<<< HEAD
-=======
     required: true,
     placeholder: "Select product subcategory",
     helpText: "Choose a specific subcategory for better classification",
->>>>>>> main
     options: [], // This will be dynamically populated
   },
   {
@@ -135,11 +127,6 @@ export const addProductFormElements = [
 ];
 
 export const subcategoryOptionsMap = {
-<<<<<<< HEAD
-  clothes: [
-    { id: "clothes-men", label: "Men's Clothes" },
-    { id: "clothes-women", label: "Women's Clothes" },
-=======
   men: [
     { id: "clothes-men", label: "Men's Clothes" },
   ],
@@ -147,7 +134,6 @@ export const subcategoryOptionsMap = {
     { id: "clothes-women", label: "Women's Clothes" },
   ],
   kids: [
->>>>>>> main
     { id: "clothes-kids", label: "Kids' Clothes" },
   ],
   electronics: [
@@ -155,8 +141,6 @@ export const subcategoryOptionsMap = {
     { id: "electronics-laptops", label: "Laptops" },
     { id: "electronics-accessories", label: "Electronics Accessories" },
   ],
-<<<<<<< HEAD
-=======
   agriculture: [
     { id: "agriculture-organic", label: "Organic Products" },
     { id: "agriculture-seeds", label: "Seeds & Seedlings" },
@@ -183,7 +167,6 @@ export const subcategoryOptionsMap = {
     { id: "footwear-casual", label: "Casual Shoes" },
     { id: "footwear-formal", label: "Formal Shoes" },
   ],
->>>>>>> main
 };
 
 export const shoppingViewHeaderMenuItems = [
@@ -276,18 +259,13 @@ export const filterOptions = {
     { id: "handcraft", label: "Handcraft" },
   ],
   subcategory: [
-<<<<<<< HEAD
-=======
     // Existing subcategories
->>>>>>> main
     { id: "clothes-men", label: "Men's Clothes" },
     { id: "clothes-women", label: "Women's Clothes" },
     { id: "clothes-kids", label: "Kids' Clothes" },
     { id: "electronics-mobiles", label: "Mobiles" },
     { id: "electronics-laptops", label: "Laptops" },
     { id: "electronics-accessories", label: "Electronics Accessories" },
-<<<<<<< HEAD
-=======
     
     // Agriculture subcategories
     { id: "agriculture-organic", label: "Organic Products" },
@@ -306,7 +284,6 @@ export const filterOptions = {
     { id: "handcraft-textiles", label: "Handwoven Textiles" },
     { id: "handcraft-jewelry", label: "Handmade Jewelry" },
     { id: "handcraft-decor", label: "Home Decor Items" },
->>>>>>> main
   ],
 };
 

@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
-import bannerOne from "../../assets/banner-1.webp";
-import bannerTwo from "../../assets/banner-2.webp";
-import bannerThree from "../../assets/banner-3.webp";
+
 import {
   Airplay,
   BabyIcon,
@@ -78,23 +76,7 @@ const subcategoriesWithIcon = [
   { id: "handcraft-decor", label: "Home Decor Items", icon: Home },
 ];
 
-const subcategoriesWithIcon = [
-  { id: "mobile_phones", label: "Mobile Phones", icon: Shirt },
-  { id: "laptops", label: "Laptops", icon: WashingMachine },
-  { id: "headphones", label: "Headphones", icon: ShoppingBasket },
-  { id: "mens_clothing", label: "Men's Clothing", icon: ShirtIcon },
-  { id: "womens_clothing", label: "Women's Clothing", icon: CloudLightning },
-  { id: "kids_clothing", label: "Kids' Clothing", icon: BabyIcon },
-];
 
-const brandsWithIcon = [
-  { id: "nike", label: "Nike", icon: Shirt },
-  { id: "adidas", label: "Adidas", icon: WashingMachine },
-  { id: "puma", label: "Puma", icon: ShoppingBasket },
-  { id: "levi", label: "Levi's", icon: Airplay },
-  { id: "zara", label: "Zara", icon: Images },
-  { id: "h&m", label: "H&M", icon: Heater },
-];
 function ShoppingHome() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { productList, productDetails } = useSelector(
@@ -213,11 +195,7 @@ function ShoppingHome() {
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
-<<<<<<< HEAD
-            Shop by Category
-=======
             Browse Categories
->>>>>>> main
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categoriesWithIcon.map((categoryItem) => (
@@ -228,31 +206,6 @@ function ShoppingHome() {
                 }
                 className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-primary hover:translate-y-[-5px]"
               >
-<<<<<<< HEAD
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <categoryItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{categoryItem.label}</span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by Subcategory</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {subcategoriesWithIcon.map((subcategoryItem) => (
-              <Card
-                key={subcategoryItem.id}
-                onClick={() => handleNavigateToListingPage(subcategoryItem, "subcategory")}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              >
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <subcategoryItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{subcategoryItem.label}</span>
-=======
                 <CardContent className="flex items-center p-6">
                   <div className="rounded-full bg-primary/10 p-3 mr-4">
                     <categoryItem.icon className="w-8 h-8 text-primary" />
@@ -263,7 +216,6 @@ function ShoppingHome() {
                       Browse {categoryItem.label.toLowerCase()} products
                     </p>
                   </div>
->>>>>>> main
                 </CardContent>
               </Card>
             ))}
