@@ -27,6 +27,7 @@ import LandingPage from "./pages/shopping-view/landing";
 import AIBusinessAdvisorTool from "./pages/shopping-view/ai-tool";
 import JobPortal from "./pages/shopping-view/jobportal";
 
+
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
