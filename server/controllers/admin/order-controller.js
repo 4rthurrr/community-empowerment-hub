@@ -2,7 +2,13 @@ const Order = require("../../models/Order");
 
 const getAllOrdersOfAllUsers = async (req, res) => {
   try {
-    const orders = await Order.find({});
+    // Add limit and sort to improve performance
+    const { limit = 100 } = req.query;
+    
+    const orders = await Order.find({})
+      .sort({ orderDate: -1 })
+      .limit(parseInt(limit, 10))
+      .select('_id orderDate orderStatus totalAmount cartItems');
 
     if (!orders.length) {
       return res.status(404).json({

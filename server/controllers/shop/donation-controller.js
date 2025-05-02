@@ -1,6 +1,7 @@
 const Donation = require("../../models/Donation");
 const User = require("../../models/User");
 const { initStripe } = require("../../helpers/stripe");
+const mongoose = require("mongoose");
 
 // Create a payment intent with Stripe
 const createDonationIntent = async (req, res) => {
@@ -11,6 +12,14 @@ const createDonationIntent = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid donation data. Please provide sellerId, buyerId, and a positive amount.",
+      });
+    }
+
+    // Validate ObjectIds before querying
+    if (!mongoose.Types.ObjectId.isValid(sellerId) || !mongoose.Types.ObjectId.isValid(buyerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid seller or buyer ID format",
       });
     }
 
@@ -70,6 +79,14 @@ const processDonation = async (req, res) => {
       });
     }
 
+    // Validate ObjectIds before creating donation
+    if (!mongoose.Types.ObjectId.isValid(sellerId) || !mongoose.Types.ObjectId.isValid(buyerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid seller or buyer ID format",
+      });
+    }
+
     // Create a new donation record
     const newDonation = new Donation({
       sellerId,
@@ -104,6 +121,14 @@ const getSellerDonations = async (req, res) => {
   try {
     const { sellerId } = req.params;
     
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(sellerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid seller ID format",
+      });
+    }
+    
     const donations = await Donation.find({ 
       sellerId, 
       status: "completed" 
@@ -127,6 +152,14 @@ const getSellerDonations = async (req, res) => {
 const getBuyerDonations = async (req, res) => {
   try {
     const { buyerId } = req.params;
+    
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(buyerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid buyer ID format",
+      });
+    }
     
     const donations = await Donation.find({ 
       buyerId, 
