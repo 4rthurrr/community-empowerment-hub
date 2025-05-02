@@ -9,6 +9,19 @@ import { Star, Award, TrendingUp, Store, MapPin, Users, Calendar, ExternalLink }
 const SellerPortfolioModal = ({ open, setOpen, sellerInfo }) => {
   const [loading, setLoading] = useState(true);
   const [sellerData, setSellerData] = useState(null);
+  const [portfolioData, setPortfolioData] = useState({
+    topRated: [],
+    bestSelling: [],
+    specialCollection: []
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [activeTab, setActiveTab] = useState("topRated");
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
 
   useEffect(() => {
     if (open) {
@@ -22,6 +35,128 @@ const SellerPortfolioModal = ({ open, setOpen, sellerInfo }) => {
       setLoading(true);
     }
   }, [open, sellerInfo]);
+
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        const response = await fetch('/api/portfolio');
+        if (!response.ok) throw new Error('Failed to fetch portfolio');
+        const data = await response.json();
+        setPortfolioData(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPortfolio();
+  }, []);
+
+
+  // Handle adding a new product
+  const handleAddProduct = () => {
+    setCurrentProduct({
+      name: "",
+      description: "",
+      price: 0,
+      image: "",
+      rating: 0,
+      reviews: 0,
+      sold: 0,
+      category: activeTab,
+      featured: false,
+      craftType: "",
+      materials: []
+    });
+    setIsDialogOpen(true);
+  };
+
+  // Handle editing an existing product
+  const handleEditProduct = (product) => {
+    setCurrentProduct({...product});
+    setIsDialogOpen(true);
+  };
+
+
+// Form validation
+const validateProductForm = () => {
+  const errors = {};
+
+  // Name validation
+  if (!currentProduct?.name?.trim()) {
+    errors.name = "Product name is required";
+  } else if (currentProduct.name.trim().length < 3) {
+    errors.name = "Product name must be at least 3 characters";
+  } else if (!/^[A-Za-z\s\-',.]+$/.test(currentProduct.name.trim())) {
+    errors.name = "Name can only contain letters, spaces, and basic punctuation";
+  }
+
+  // Category validation
+  if (!currentProduct?.category) {
+    errors.category = "Please select a category";
+  }
+
+  // Craft Type validation
+  if (!currentProduct?.craftType?.trim()) {
+    errors.craftType = "Craft type is required";
+  } else if (!/^[A-Za-z\s\-',.]+$/.test(currentProduct.craftType.trim())) {
+    errors.craftType = "Craft type can only contain letters and spaces";
+  }
+
+  // Price validation
+  if (!currentProduct?.price) {
+    errors.price = "Price is required";
+  } else if (isNaN(Number(currentProduct.price))) {
+    errors.price = "Price must be a valid number";
+  } else if (Number(currentProduct.price) < 0) {
+    errors.price = "Price cannot be negative";
+  }
+
+  // Description validation
+  if (!currentProduct?.description?.trim()) {
+    errors.description = "Description is required";
+  } else if (currentProduct.description.trim().length < 20) {
+    errors.description = "Description should be at least 20 characters";
+  }
+
+  // Image URL validation
+  if (!currentProduct?.image?.trim()) {
+    errors.image = "Image URL is required";
+  } else if (!/^(https?:\/\/).+\.(jpe?g|png|webp|gif|svg)$/i.test(currentProduct.image)) {
+    errors.image = "Please enter a valid image URL (jpg, png, webp, gif, svg)";
+  }
+
+  // Materials validation
+  if (!currentProduct?.materials?.length || 
+      currentProduct.materials.some(material => !material.trim())) {
+    errors.materials = "Add at least one valid material";
+  }
+
+  // Rating validation
+  if (typeof currentProduct?.rating === 'undefined') {
+    errors.rating = "Rating is required";
+  } else if (isNaN(currentProduct.rating) || 
+             currentProduct.rating < 0 || 
+             currentProduct.rating > 5) {
+    errors.rating = "Rating must be between 0 and 5";
+  }
+
+  // Reviews validation
+  if (typeof currentProduct?.reviews === 'undefined') {
+    errors.reviews = "Number of reviews is required";
+  } else if (!Number.isInteger(currentProduct.reviews) || currentProduct.reviews < 0) {
+    errors.reviews = "Reviews must be a non-negative whole number";
+  }
+
+  // Sold units validation
+  if (typeof currentProduct?.sold === 'undefined') {
+    errors.sold = "Units sold is required";
+  } else if (!Number.isInteger(currentProduct.sold) || currentProduct.sold < 0) {
+    errors.sold = "Units sold must be a non-negative whole number";
+  }
+
+  return errors;
+};
 
   // Format price helper
   const formatPrice = (price) => {
