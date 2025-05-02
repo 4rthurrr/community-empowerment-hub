@@ -3,6 +3,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { 
+  fetchAllJobs, 
+  fetchMyJobs, 
+  createJob, 
+  updateJob, 
+  deleteJob,
+  applyForJob,
+  fetchJobApplications,
+  updateApplicationStatus as updateApplicationStatusAPI  // Rename to avoid conflict
+} from '@/services/jobPortalService';
+
+const API_URL = 'http://localhost:5000/api';
 
 const JobPortal = () => {
   // Modal states
@@ -54,149 +66,98 @@ const JobPortal = () => {
   const [applicationFormErrors, setApplicationFormErrors] = useState({});
   const [isApplicationSubmitting, setIsApplicationSubmitting] = useState(false);
   
-  // Mock job data relevant to Community Empowerment Hub
-  const dummyJobs = [
-    {
-      id: 1,
-      jobTitle: 'Handcraft Artisan',
-      companyName: 'Artisan Collective Sri Lanka',
-      location: 'Colombo',
-      salary: 35000,
-      jobDescription: 'Seeking skilled artisans specializing in traditional Sri Lankan handcrafts. Must have experience with local materials and traditional techniques. Will create items for both local markets and tourism sector.',
-      category: 'Crafts',
-      postedDate: '2025-03-15',
-      postedBy: 'user123' // Mock user ID
-    },
-    {
-      id: 2,
-      jobTitle: 'Electrician',
-      companyName: 'Community Development Trust',
-      location: 'Kandy',
-      salary: 42000,
-      jobDescription: 'Experienced electrician needed for community infrastructure projects. Must have certification and 3+ years of experience with both residential and commercial installations.',
-      category: 'Trades',
-      postedDate: '2025-03-18',
-      postedBy: 'other123'
-    },
-    // Other job listings remain the same...
-    {
-      id: 3,
-      jobTitle: 'Sewing Skills Instructor',
-      companyName: 'Women Empowerment Cooperative',
-      location: 'Jaffna',
-      salary: 28000,
-      jobDescription: 'Looking for a skilled tailor to teach sewing and garment-making to women in our community skills program. Part-time position, experience in teaching preferred.',
-      category: 'Education',
-      postedDate: '2025-03-10',
-      postedBy: 'other123'
-    },
-    {
-      id: 4,
-      jobTitle: 'Organic Farming Coordinator',
-      companyName: 'Sustainable Agriculture Network',
-      location: 'Rural',
-      salary: 38000,
-      jobDescription: 'Coordinator needed to help organize and train small-scale farmers in organic farming techniques. Knowledge of sustainable agriculture practices required.',
-      category: 'Agriculture',
-      postedDate: '2025-03-20',
-      postedBy: 'user123' // Mock user ID
-    },
-    {
-      id: 5,
-      jobTitle: 'Community Health Worker',
-      companyName: 'Rural Health Initiative',
-      location: 'Batticaloa',
-      salary: 32000,
-      jobDescription: 'Part-time community health worker needed to assist with health education and basic healthcare services in underserved areas.',
-      category: 'Healthcare',
-      postedDate: '2025-03-17',
-      postedBy: 'other123'
-    },
-    {
-      id: 6,
-      jobTitle: 'Traditional Cooking Instructor',
-      companyName: 'Culinary Heritage Center',
-      location: 'Galle',
-      salary: 30000,
-      jobDescription: 'Looking for someone with extensive knowledge of traditional Sri Lankan cooking techniques to provide workshops and training sessions for community members interested in culinary entrepreneurship.',
-      category: 'Culinary',
-      postedDate: '2025-03-12',
-      postedBy: 'other123'
-    },
-    {
-      id: 7,
-      jobTitle: 'Carpenter',
-      companyName: 'Rural Development Association',
-      location: 'Anuradhapura',
-      salary: 45000,
-      jobDescription: 'Skilled carpenter needed for community building projects. Must have experience with both traditional and modern woodworking techniques.',
-      category: 'Trades',
-      postedDate: '2025-03-19',
-      postedBy: 'user123' // Mock user ID
-    }
-  ];
+  // Add loading and error states
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [jobApplicationsLoading, setJobApplicationsLoading] = useState({});
   
-  // Mock current user ID (in a real app, this would come from authentication)
-  const currentUserId = 'user123';
+  // Add this after other state hooks
+  const [mockDataAdded, setMockDataAdded] = useState(false);
   
-  // Add the missing mock applications data
-  const mockApplications = [
-    {
-      id: 1,
-      jobId: 1,
-      applicantId: 'other456',
-      applicantName: 'Priya Fernando',
-      email: 'priya.f@example.com',
-      phone: '071-555-3421',
-      experience: '5 years of experience with traditional Sri Lankan handicrafts, specializing in pottery and batik.',
-      coverLetter: 'I am excited to apply for the Handcraft Artisan position as I believe my skills in traditional crafts would be valuable to your organization...',
-      resume: 'resume-file.pdf',
-      status: 'pending',
-      appliedDate: '2025-03-20'
-    },
-    {
-      id: 2,
-      jobId: 1,
-      applicantId: 'other789',
-      applicantName: 'Amal Perera',
-      email: 'amal.p@example.com',
-      phone: '077-555-8976',
-      experience: '3 years working with local artisan collective, trained in traditional techniques by master craftspeople.',
-      coverLetter: 'Having worked with traditional materials and techniques for several years, I am interested in bringing my skills to your organization...',
-      resume: 'resume-file.pdf',
-      status: 'pending',
-      appliedDate: '2025-03-21'
-    },
-    {
-      id: 3,
-      jobId: 4,
-      applicantId: 'other123',
-      applicantName: 'Kamal Silva',
-      email: 'kamal.s@example.com',
-      phone: '076-555-4567',
-      experience: '4 years working with sustainable farming practices, certified in organic cultivation methods.',
-      coverLetter: 'With my background in sustainable agriculture and experience training small-scale farmers, I believe I can contribute significantly to your network...',
-      resume: 'resume-file.pdf',
-      status: 'pending',
-      appliedDate: '2025-03-22'
-    }
-  ];
+  // Get current user ID from localStorage or wherever it's stored
+  const [currentUserId, setCurrentUserId] = useState(null);
   
-  // Load dummy jobs on component mount and filter my jobs
+  // Helper function to normalize a job object (ensure it has consistent ID handling)
+  const normalizeJob = (job) => {
+    if (!job) return null;
+    return {
+      ...job,
+      id: job._id || job.id,  // Ensure job always has an id property from MongoDB _id
+      _id: job._id || job.id   // Ensure job always has _id property too for consistency
+    };
+  };
+
+  // Load jobs on component mount
   useEffect(() => {
-    setJobs(dummyJobs);
-    setFilteredJobs(dummyJobs);
+    const loadJobs = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch all jobs
+        const allJobs = await fetchAllJobs();
+        setJobs(allJobs.map(normalizeJob));
+        setFilteredJobs(allJobs.map(normalizeJob));
+        
+        // Fetch jobs posted by current user
+        if (localStorage.getItem('token')) {
+          const userJobs = await fetchMyJobs();
+          console.log("My jobs from server:", userJobs); // Debug log
+          setMyJobs(userJobs.map(normalizeJob));
+        }
+      } catch (err) {
+        console.error('Error loading jobs:', err);
+        setError('Failed to load job opportunities. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Filter jobs posted by current user
-    const userJobs = dummyJobs.filter(job => job.postedBy === currentUserId);
-    setMyJobs(userJobs);
+    loadJobs();
   }, []);
   
-  // Load mock applications on component mount
+  // Load wishlist from localStorage
   useEffect(() => {
-    setApplications(mockApplications);
+    const savedWishlist = localStorage.getItem('jobWishlist');
+    if (savedWishlist) {
+      try {
+        setWishlist(JSON.parse(savedWishlist));
+      } catch (err) {
+        console.error('Error parsing wishlist from localStorage:', err);
+      }
+    }
   }, []);
-  
+
+  // Save wishlist to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('jobWishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  // Add this after other useEffect hooks to load user ID
+  useEffect(() => {
+    // Get the token from localStorage
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      try {
+        // If token is JWT, decode it to get user info
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          setCurrentUserId(payload.id || null);
+        }
+      } catch (err) {
+        console.error('Error parsing user token:', err);
+      }
+    }
+  }, []);
+
+  // Helper function to get the correct MongoDB ID
+  const getMongoId = (job) => {
+    // Return the MongoDB _id if available, otherwise fallback to client-side id
+    return job._id || job.id;
+  };
+
   // Open modal and reset form for new job
   const openModal = () => {
     setFormData({
@@ -213,20 +174,23 @@ const JobPortal = () => {
     setEditJobId(null);
   };
   
-  // Open modal with job data for editing
+  // Modify openEditModal function to handle mock data
   const openEditModal = (job) => {
+    const normalizedJob = normalizeJob(job);
+    console.log('Editing job with ID:', getMongoId(normalizedJob)); // Debug log
+    
     setFormData({
-      jobTitle: job.jobTitle,
-      companyName: job.companyName,
-      location: job.location,
-      salary: job.salary.toString(),
-      jobDescription: job.jobDescription,
-      category: job.category
+      jobTitle: normalizedJob.jobTitle,
+      companyName: normalizedJob.companyName,
+      location: normalizedJob.location,
+      salary: normalizedJob.salary ? normalizedJob.salary.toString() : '',
+      jobDescription: normalizedJob.jobDescription,
+      category: normalizedJob.category
     });
     setFormErrors({});
     setIsModalOpen(true);
     setIsEditMode(true);
-    setEditJobId(job.id);
+    setEditJobId(getMongoId(normalizedJob)); // Store the MongoDB ID
   };
   
   // Close modal
@@ -307,7 +271,20 @@ const JobPortal = () => {
     return errors;
   };
   
-  // Handle form submission (create or edit job)
+  // Add function to refresh my jobs
+  const refreshMyJobs = async () => {
+    try {
+      if (localStorage.getItem('token')) {
+        const userJobs = await fetchMyJobs();
+        console.log("Refreshed my jobs:", userJobs); // Debug log
+        setMyJobs(userJobs.map(normalizeJob));
+      }
+    } catch (err) {
+      console.error('Failed to refresh my jobs:', err);
+    }
+  };
+
+  // Modify handleSubmit function to handle mock data when editing
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -320,170 +297,206 @@ const JobPortal = () => {
       setIsSubmitting(true);
       
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Prepare job data
+        const jobData = {
+          jobTitle: formData.jobTitle,
+          companyName: formData.companyName,
+          location: formData.location,
+          salary: formData.salary ? Number(formData.salary) : null,
+          jobDescription: formData.jobDescription,
+          category: formData.category
+        };
+        
+        // Check if we're editing a mock job (mock IDs start with "mock-")
+        const isMockJob = isEditMode && typeof editJobId === 'string' && editJobId.startsWith('mock-');
         
         if (isEditMode) {
-          // Update existing job
-          const updatedJobs = jobs.map(job => 
-            job.id === editJobId ? {
-              ...job,
-              jobTitle: formData.jobTitle,
-              companyName: formData.companyName,
-              location: formData.location,
-              salary: formData.salary ? Number(formData.salary) : null,
-              jobDescription: formData.jobDescription,
-              category: formData.category
-            } : job
-          );
-          
-          setJobs(updatedJobs);
-          
-          // Update myJobs state
-          const updatedMyJobs = myJobs.map(job => 
-            job.id === editJobId ? {
-              ...job,
-              jobTitle: formData.jobTitle,
-              companyName: formData.companyName,
-              location: formData.location,
-              salary: formData.salary ? Number(formData.salary) : null,
-              jobDescription: formData.jobDescription,
-              category: formData.category
-            } : job
-          );
-          
-          setMyJobs(updatedMyJobs);
-          
-          // Update wishlist if the edited job is in wishlist
-          if (wishlist.some(job => job.id === editJobId)) {
-            const updatedWishlist = wishlist.map(job => 
-              job.id === editJobId ? {
-                ...job,
-                jobTitle: formData.jobTitle,
-                companyName: formData.companyName,
-                location: formData.location,
-                salary: formData.salary ? Number(formData.salary) : null,
-                jobDescription: formData.jobDescription,
-                category: formData.category
-              } : job
-            );
+          if (isMockJob) {
+            console.log('Updating mock job with ID:', editJobId); // Debug log
             
-            setWishlist(updatedWishlist);
+            // For mock job, update it directly in state
+            const updatedJob = {
+              id: editJobId,
+              _id: editJobId,
+              ...jobData,
+              postedDate: new Date().toLocaleDateString() // Refresh the date
+            };
+            
+            // Update myJobs state
+            setMyJobs(myJobs.map(job => (getMongoId(job) === editJobId) ? updatedJob : job));
+            
+            // Update wishlist if the edited job is in wishlist
+            if (wishlist.some(job => getMongoId(job) === editJobId)) {
+              setWishlist(wishlist.map(job => (getMongoId(job) === editJobId) ? updatedJob : job));
+            }
+            
+            alert('Mock job opportunity updated successfully!');
+          } else {
+            // Real job - use API
+            console.log('Updating real job with ID:', editJobId); // Debug log
+            
+            // Update existing job
+            const updatedJob = await updateJob(editJobId, jobData);
+            const normalizedJob = normalizeJob(updatedJob);
+            
+            // Update jobs state with the new data
+            setJobs(jobs.map(job => (getMongoId(job) === editJobId) ? normalizedJob : job));
+            
+            // Update myJobs state
+            setMyJobs(myJobs.map(job => (getMongoId(job) === editJobId) ? normalizedJob : job));
+            
+            // Update wishlist if the edited job is in wishlist
+            if (wishlist.some(job => getMongoId(job) === editJobId)) {
+              setWishlist(wishlist.map(job => (getMongoId(job) === editJobId) ? normalizedJob : job));
+            }
+            
+            alert('Job opportunity updated successfully!');
           }
-          
-          alert('Job opportunity updated successfully!');
         } else {
           // Add new job
-          const newJob = {
-            ...formData,
-            id: jobs.length + 1,
-            salary: formData.salary ? Number(formData.salary) : null,
-            postedDate: new Date().toISOString().slice(0, 10),
-            postedBy: currentUserId
-          };
+          const newJob = await createJob(jobData);
+          const normalizedJob = normalizeJob(newJob);
+          console.log("Created new job:", normalizedJob); // Debug log
           
-          const updatedJobs = [newJob, ...jobs];
-          setJobs(updatedJobs);
-          
-          // Add to myJobs
-          setMyJobs([newJob, ...myJobs]);
+          setJobs([normalizedJob, ...jobs]);
+          setMyJobs([normalizedJob, ...myJobs]);
           
           alert('Job opportunity posted successfully!');
+          
+          // Switch to My Jobs tab after creating a new job
+          setActiveTab('myjobs');
+        }
+        
+        // Refresh my jobs from server to ensure consistency (only for real data)
+        if (!isMockJob) {
+          await refreshMyJobs();
         }
         
         // Apply current filters to updated jobs if on main tab
         if (activeTab === 'all') {
-          applyFilters();
+          await applyFilters();
         }
         
         // Close modal and reset form
         setIsModalOpen(false);
-      } catch (error) {
-        console.error('Error handling job:', error);
-        alert('Failed to process job opportunity. Please try again.');
+      } catch (err) {
+        console.error('Error submitting job:', err);
+        
+        // Handle validation errors from the server
+        if (err.response && err.response.data && err.response.data.errors) {
+          const serverErrors = {};
+          err.response.data.errors.forEach(error => {
+            serverErrors[error.field] = error.message;
+          });
+          setFormErrors({...errors, ...serverErrors});
+        } else {
+          alert(`Failed to ${isEditMode ? 'update' : 'post'} job opportunity. ${err.response?.data?.message || 'Please try again.'}`);
+        }
       } finally {
         setIsSubmitting(false);
       }
     }
   };
   
-  // Delete a job
+  // Modify handleDeleteJob function to handle mock data
   const handleDeleteJob = async (jobId) => {
+    // Make sure we have the MongoDB _id
+    const mongoId = jobId._id || jobId;
+    
     if (window.confirm('Are you sure you want to delete this job opportunity?')) {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Check if we're deleting a mock job
+        const isMockJob = typeof mongoId === 'string' && mongoId.startsWith('mock-');
+        
+        console.log(`Deleting ${isMockJob ? 'mock' : 'real'} job with ID:`, mongoId); // Debug log
+        
+        if (!isMockJob) {
+          // Only call API for real jobs
+          await deleteJob(mongoId);
+        }
+        
+        // For both real and mock jobs, update the state
         
         // Remove from all jobs
-        const updatedJobs = jobs.filter(job => job.id !== jobId);
+        const updatedJobs = jobs.filter(job => getMongoId(job) !== mongoId);
         setJobs(updatedJobs);
         
         // Remove from my jobs
-        const updatedMyJobs = myJobs.filter(job => job.id !== jobId);
+        const updatedMyJobs = myJobs.filter(job => getMongoId(job) !== mongoId);
         setMyJobs(updatedMyJobs);
         
         // Remove from wishlist if present
-        if (wishlist.some(job => job.id !== jobId)) {
-          const updatedWishlist = wishlist.filter(job => job.id !== jobId);
+        if (wishlist.some(job => getMongoId(job) === mongoId)) {
+          const updatedWishlist = wishlist.filter(job => getMongoId(job) !== mongoId);
           setWishlist(updatedWishlist);
+        }
+        
+        // Remove applications for this job
+        if (isMockJob) {
+          // For mock jobs, filter applications locally
+          const updatedApplications = applications.filter(app => app.jobId !== mongoId);
+          setApplications(updatedApplications);
         }
         
         // Apply filters to update filtered jobs if on main tab
         if (activeTab === 'all') {
-          applyFilters(updatedJobs);
+          await applyFilters();
         }
         
         alert('Job opportunity deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting job:', error);
-        alert('Failed to delete job opportunity. Please try again.');
+      } catch (err) {
+        console.error('Error deleting job:', err);
+        alert(`Failed to delete job opportunity. ${err.response?.data?.message || 'Please try again.'}`);
       }
     }
   };
   
   // Toggle wishlist status
   const toggleWishlist = (job) => {
-    const isInWishlist = wishlist.some(item => item.id === job.id);
+    // Normalize the job object to ensure consistent ID handling
+    const normalizedJob = normalizeJob(job);
+    const jobId = normalizedJob.id;
+    
+    console.log('Toggle wishlist for job:', jobId); // Debug log
+    
+    // Check if this specific job ID is in the wishlist
+    const isInWishlist = wishlist.some(item => String(item.id) === String(jobId));
     
     if (isInWishlist) {
-      // Remove from wishlist
-      const updatedWishlist = wishlist.filter(item => item.id !== job.id);
+      // Remove this specific job from wishlist
+      const updatedWishlist = wishlist.filter(item => String(item.id) !== String(jobId));
       setWishlist(updatedWishlist);
     } else {
-      // Add to wishlist
-      setWishlist([...wishlist, job]);
+      // Add this specific job to wishlist
+      setWishlist([...wishlist, normalizedJob]);
     }
   };
   
-  // Check if a job is in wishlist
+  // Check if a job is in wishlist - use string comparison for reliable matching
   const isJobInWishlist = (jobId) => {
-    return wishlist.some(job => job.id === jobId);
+    if (!jobId) return false;
+    return wishlist.some(job => String(job.id) === String(jobId));
   };
   
   // Apply search and filters
-  const applyFilters = (jobsList = jobs) => {
-    let filtered = [...jobsList];
-    
-    // Apply search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(job => 
-        job.jobTitle.toLowerCase().includes(term) || 
-        job.companyName.toLowerCase().includes(term)
-      );
+  const applyFilters = async () => {
+    try {
+      setIsLoading(true);
+      
+      const filters = {
+        search: searchTerm,
+        location: locationFilter,
+        category: categoryFilter
+      };
+      
+      const filteredJobs = await fetchAllJobs(filters);
+      setFilteredJobs(filteredJobs);
+    } catch (err) {
+      console.error('Error applying filters:', err);
+      setError('Failed to filter job opportunities. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Apply location filter
-    if (locationFilter) {
-      filtered = filtered.filter(job => job.location === locationFilter);
-    }
-    
-    // Apply category filter
-    if (categoryFilter) {
-      filtered = filtered.filter(job => job.category === categoryFilter);
-    }
-    
-    setFilteredJobs(filtered);
   };
   
   // Handle search/filter changes
@@ -536,7 +549,11 @@ const JobPortal = () => {
   
   // Open application modal
   const openApplicationModal = (job) => {
-    setCurrentJobToApply(job);
+    // Normalize the job to ensure it has consistent ID properties
+    const normalizedJob = normalizeJob(job);
+    console.log('Opening application modal for job:', normalizedJob.id);
+    
+    setCurrentJobToApply(normalizedJob);
     setApplicationFormData({
       name: '',
       email: '',
@@ -567,9 +584,37 @@ const JobPortal = () => {
   // Handle file upload for resume
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setApplicationFormErrors({
+          ...applicationFormErrors,
+          resume: 'File size must be less than 5MB'
+        });
+        return;
+      }
+      
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setApplicationFormErrors({
+          ...applicationFormErrors,
+          resume: 'Only PDF, DOC, and DOCX files are allowed'
+        });
+        return;
+      }
+      
+      // Clear any previous errors
+      if (applicationFormErrors.resume) {
+        const newErrors = {...applicationFormErrors};
+        delete newErrors.resume;
+        setApplicationFormErrors(newErrors);
+      }
+      
       setApplicationFormData({
         ...applicationFormData,
-        resume: e.target.files[0]
+        resume: file
       });
     }
   };
@@ -651,37 +696,66 @@ const JobPortal = () => {
       setIsApplicationSubmitting(true);
       
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Ensure we have a valid job ID
+        if (!currentJobToApply || !currentJobToApply.id) {
+          throw new Error('Invalid job reference. Missing job ID.');
+        }
         
-        // Create new application
-        const newApplication = {
-          id: applications.length + 1,
-          jobId: currentJobToApply.id,
-          applicantId: currentUserId,
+        const jobId = currentJobToApply.id;
+        console.log('Submitting application for job ID:', jobId);
+        
+        // Create application data object
+        const applicationData = {
           applicantName: applicationFormData.name,
           email: applicationFormData.email,
           phone: applicationFormData.phone,
           experience: applicationFormData.experience,
-          coverLetter: applicationFormData.coverLetter,
-          resume: applicationFormData.resume ? applicationFormData.resume.name : 'resume.pdf',
-          status: 'pending',
-          appliedDate: new Date().toISOString().slice(0, 10)
+          coverLetter: applicationFormData.coverLetter
         };
         
-        // Add to applications
-        setApplications([...applications, newApplication]);
+        // If using file upload, use FormData
+        if (applicationFormData.resume) {
+          // Use FormData for file uploads
+          const formData = new FormData();
+          Object.entries(applicationData).forEach(([key, value]) => {
+            formData.append(key, value);
+          });
+          
+          // Add resume file
+          formData.append('resume', applicationFormData.resume);
+          
+          // Direct fetch for file upload
+          const response = await fetch(`${API_URL}/jobs/${jobId}/applications`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to submit application');
+          }
+          
+          const newApplication = await response.json();
+          setApplications([...applications, newApplication]);
+        } else {
+          // Without file, use the regular API function
+          const newApplication = await applyForJob(jobId, applicationData);
+          setApplications([...applications, newApplication]);
+        }
         
         // Add to user's applied jobs
-        setUserAppliedJobs([...userAppliedJobs, currentJobToApply.id]);
+        setUserAppliedJobs([...userAppliedJobs, jobId]);
         
         alert(`Your application for ${currentJobToApply.jobTitle} has been submitted successfully!`);
         
         // Close modal
         closeApplicationModal();
-      } catch (error) {
-        console.error('Error submitting application:', error);
-        alert('Failed to submit application. Please try again.');
+      } catch (err) {
+        console.error('Error submitting application:', err);
+        alert(`Failed to submit application: ${err.message}`);
       } finally {
         setIsApplicationSubmitting(false);
       }
@@ -690,21 +764,80 @@ const JobPortal = () => {
   
   // Check if user has applied to a job
   const hasUserAppliedToJob = (jobId) => {
-    return userAppliedJobs.includes(jobId) || applications.some(app => app.applicantId === currentUserId && app.jobId === jobId);
+    // First check the userAppliedJobs array
+    if (userAppliedJobs.includes(jobId)) {
+      return true;
+    }
+    
+    // Only check applications if we have currentUserId
+    if (currentUserId) {
+      return applications.some(app => 
+        app.applicantId === currentUserId && app.jobId === jobId
+      );
+    }
+    
+    // Default to false if we can't verify
+    return false;
   };
   
   // Get applications for a specific job
   const getApplicationsForJob = (jobId) => {
+    // Look for matching applications 
     return applications.filter(app => app.jobId === jobId);
   };
   
+  // Load applications for a specific job
+  const loadJobApplications = async (jobId) => {
+    try {
+      setJobApplicationsLoading(prev => ({...prev, [jobId]: true}));
+      const jobApplications = await fetchJobApplications(jobId);
+      
+      // Update applications state
+      setApplications(prev => [...prev.filter(app => app.jobId !== jobId), ...jobApplications]);
+      
+      // Expand the applications section
+      toggleApplicationsExpansion(jobId);
+    } catch (err) {
+      console.error(`Error loading applications for job ${jobId}:`, err);
+      alert(`Failed to load applications. ${err.response?.data?.message || 'Please try again.'}`);
+    } finally {
+      setJobApplicationsLoading(prev => ({...prev, [jobId]: false}));
+    }
+  };
+  
   // Update application status
-  const updateApplicationStatus = (applicationId, newStatus) => {
-    const updatedApplications = applications.map(app => 
-      app.id === applicationId ? { ...app, status: newStatus } : app
-    );
-    setApplications(updatedApplications);
-    alert(`Application status updated to ${newStatus}`);
+  const handleUpdateApplicationStatus = async (applicationId, newStatus) => {
+    try {
+      // Check if this is a mock application (starts with 'mock-app')
+      const isMockApplication = typeof applicationId === 'string' && applicationId.startsWith('mock-app');
+      
+      if (isMockApplication) {
+        console.log(`Updating mock application ${applicationId} to ${newStatus}`);
+        
+        // For mock applications, just update the state locally
+        const updatedApplications = applications.map(app => 
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        );
+        setApplications(updatedApplications);
+        
+        // Show success message but don't block UI
+        alert(`Application status updated to ${newStatus}`);
+      } else {
+        // For real applications, call the API
+        await updateApplicationStatusAPI(applicationId, newStatus);
+        
+        // Update the application status in state
+        const updatedApplications = applications.map(app => 
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        );
+        setApplications(updatedApplications);
+        
+        alert(`Application status updated to ${newStatus}`);
+      }
+    } catch (err) {
+      console.error(`Error updating application ${applicationId} status:`, err);
+      alert(`Failed to update application status. Please try again.`);
+    }
   };
   
   // Add new state for tracking expanded application sections
@@ -723,194 +856,425 @@ const JobPortal = () => {
     return expandedJobApplications[jobId] || false;
   };
   
+  // Add this function to generate mock job data
+  const addMockJobListings = () => {
+    // Only add mock data once
+    if (mockDataAdded) {
+      alert('Mock data has already been added!');
+      return;
+    }
+  
+    // Create mock job data
+    const mockJobs = [
+      {
+        _id: 'mock-job-id-1',
+        id: 'mock-job-id-1',
+        jobTitle: 'Handcraft Artisan',
+        companyName: 'Traditional Crafts Cooperative',
+        location: 'Kandy',
+        salary: 45000,
+        jobDescription: 'We are looking for skilled artisans to create traditional Sri Lankan handicrafts. Experience with batik, wood carving, or pottery is preferred. This position involves creating high-quality items for both local markets and tourism industry.',
+        category: 'Crafts',
+        postedDate: new Date().toLocaleDateString(),
+        applications: [
+          {
+            id: 'mock-app-1',
+            applicantName: 'Rohan Silva',
+            email: 'rohan.silva@example.com',
+            phone: '0712-345-6789',
+            experience: 'Over 5 years experience in traditional batik techniques and pottery crafting.',
+            coverLetter: 'I am deeply passionate about preserving traditional Sri Lankan crafts and have been practicing these art forms since my youth. I would love to bring my expertise to your cooperative.',
+            resume: 'rohan-silva-resume.pdf',
+            status: 'pending',
+            appliedDate: '2023-06-15',
+            jobId: 'mock-job-id-1'
+          },
+          {
+            id: 'mock-app-2',
+            applicantName: 'Malini Fernando',
+            email: 'malini.f@example.com',
+            phone: '0723-456-7890',
+            experience: '3 years of experience in wood carving and mask making techniques. Completed certification in traditional crafts.',
+            coverLetter: 'Having worked with several craft organizations in the past, I believe my skills in traditional wood carving would be a valuable addition to your team. I am eager to contribute to preserving our cultural heritage.',
+            resume: 'malini-fernando-resume.pdf',
+            status: 'approved',
+            appliedDate: '2023-06-18',
+            jobId: 'mock-job-id-1'
+          }
+        ]
+      },
+      {
+        _id: 'mock-job-id-2',
+        id: 'mock-job-id-2',
+        jobTitle: 'Sustainable Farming Specialist',
+        companyName: 'Green Earth Agricultural Collective',
+        location: 'Anuradhapura',
+        salary: 52000,
+        jobDescription: 'Seeking an experienced farming specialist with knowledge of sustainable agricultural practices. The role involves training local farmers on organic farming techniques, water conservation, and crop rotation strategies to improve yield while maintaining ecological balance.',
+        category: 'Agriculture',
+        postedDate: new Date().toLocaleDateString(),
+        applications: [
+          {
+            id: 'mock-app-3',
+            applicantName: 'Anura Perera',
+            email: 'anura.p@example.com',
+            phone: '0756-789-0123',
+            experience: '7 years working with agricultural NGOs on sustainable farming initiatives across Sri Lanka. Certified in permaculture design.',
+            coverLetter: 'I have dedicated my career to promoting sustainable farming methods. My experience working with various farmer cooperatives has given me insights into how traditional knowledge can be combined with modern techniques for optimal results.',
+            resume: 'anura-perera-resume.pdf',
+            status: 'pending',
+            appliedDate: '2023-07-02',
+            jobId: 'mock-job-id-2'
+          },
+          {
+            id: 'mock-app-4',
+            applicantName: 'Kamala Bandara',
+            email: 'kamala.b@example.com',
+            phone: '0778-901-2345',
+            experience: '4 years of experience in agricultural extension services, specializing in water management and organic pest control methods.',
+            coverLetter: 'With a background in both traditional farming and modern sustainable practices, I can bridge the gap between old and new approaches. I\'m passionate about empowering local farmers with knowledge that can improve their livelihoods while protecting our environment.',
+            resume: 'kamala-bandara-resume.pdf',
+            status: 'rejected',
+            appliedDate: '2023-07-05',
+            jobId: 'mock-job-id-2'
+          }
+        ]
+      }
+    ];
+  
+    // Add mock jobs to my jobs list
+    setMyJobs([...myJobs, ...mockJobs]);
+    
+    // Add mock applications to applications state
+    const allMockApplications = [
+      ...mockJobs[0].applications,
+      ...mockJobs[1].applications
+    ];
+    setApplications([...applications, ...allMockApplications]);
+    
+    // Expand applications sections to show the data
+    setTimeout(() => {
+      mockJobs.forEach(job => {
+        setExpandedJobApplications(prev => ({
+          ...prev,
+          [job.id]: true // Force expand to show applications
+        }));
+      });
+    }, 100);
+    
+    // Mark as added so we don't add duplicates
+    setMockDataAdded(true);
+    
+    alert('2 mock job listings with sample applications have been added to your job listings!');
+  };
+  
   // Render job card - extracted as component for reuse
-  const JobCard = ({ job, showActions = true, showWishlist = true, showEdit = false, showDelete = false, showApplications = false }) => (
-    <div key={job.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative">
-      {showWishlist && (
-        <button
-          onClick={() => toggleWishlist(job)}
-          className={`absolute top-3 right-3 p-2 rounded-full ${
-            isJobInWishlist(job.id) ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 hover:bg-gray-50'
-          }`}
-          aria-label={isJobInWishlist(job.id) ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={isJobInWishlist(job.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </button>
-      )}
-      
-      <div className="text-lg font-bold text-gray-800">{job.jobTitle}</div>
-      <div className="text-gray-600 mb-2">{job.companyName}</div>
-      
-      <div className="flex items-center mb-3">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${categoryColors[job.category] || 'bg-gray-500'}`}>
-          {job.category}
-        </span>
-        <span className="text-xs text-gray-500 ml-auto">Posted: {job.postedDate}</span>
-      </div>
-      
-      <div className="text-sm text-gray-700 mb-1">
-        <span className="font-semibold">Location:</span> {job.location}
-      </div>
-      
-      {job.salary && (
-        <div className="text-sm text-gray-700 mb-1">
-          <span className="font-semibold">Salary:</span> Rs. {job.salary.toLocaleString()}
+  const JobCard = ({ job, showActions = true, showWishlist = true, showEdit = false, showDelete = false, showApplications = false }) => {
+    // Make sure job has an id property for consistency
+    const normalizedJob = normalizeJob(job);
+    
+    console.log("Rendering job card:", normalizedJob.id, normalizedJob.jobTitle); // Debug log
+    
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative">
+        {showWishlist && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event bubbling
+              toggleWishlist(normalizedJob); // Use normalized job with consistent ID
+            }}
+            className={`absolute top-3 right-3 p-2 rounded-full ${
+              isJobInWishlist(normalizedJob.id) ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 hover:bg-gray-50'
+            }`}
+            aria-label={isJobInWishlist(normalizedJob.id) ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={isJobInWishlist(normalizedJob.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        )}
+        
+        <div className="text-lg font-bold text-gray-800">{job.jobTitle}</div>
+        <div className="text-gray-600 mb-2">{job.companyName}</div>
+        
+        <div className="flex items-center mb-3">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${categoryColors[job.category] || 'bg-gray-500'}`}>
+            {job.category}
+          </span>
+          <span className="text-xs text-gray-500 ml-auto">Posted: {job.postedDate}</span>
         </div>
-      )}
-      
-      <div className="my-4 text-sm text-gray-600">
-        {job.jobDescription.length > 120 
-          ? `${job.jobDescription.substring(0, 120)}...` 
-          : job.jobDescription}
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mt-3">
-        {showActions && (
-          hasUserAppliedToJob(job.id) ? (
-            <button 
-              className="px-4 py-2 bg-green-200 text-green-800 rounded-md text-sm font-semibold cursor-default flex-1 flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5"></path>
-              </svg>
-              Applied
-            </button>
-          ) : (
-            <button 
-              className="px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors flex-1"
-              onClick={() => openApplicationModal(job)}
-            >
-              Apply Now
-            </button>
-          )
+        
+        <div className="text-sm text-gray-700 mb-1">
+          <span className="font-semibold">Location:</span> {job.location}
+        </div>
+        
+        {job.salary && (
+          <div className="text-sm text-gray-700 mb-1">
+            <span className="font-semibold">Salary:</span> Rs. {job.salary.toLocaleString()}
+          </div>
         )}
         
-        {showEdit && (
-          <button 
-            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors flex-1"
-            onClick={() => openEditModal(job)}
-          >
-            Edit
-          </button>
-        )}
+        <div className="my-4 text-sm text-gray-600">
+          {job.jobDescription.length > 120 
+            ? `${job.jobDescription.substring(0, 120)}...` 
+            : job.jobDescription}
+        </div>
         
-        {showDelete && (
-          <button 
-            className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-colors flex-1"
-            onClick={() => handleDeleteJob(job.id)}
-          >
-            Delete
-          </button>
-        )}
-      </div>
-      
-      {showApplications && (
-        <>
-          {getApplicationsForJob(job.id).length > 0 ? (
-            <div className="mt-4 pt-4 border-t">
+        <div className="flex flex-wrap gap-2 mt-3">
+          {showActions && (
+            hasUserAppliedToJob(normalizedJob.id) ? (
               <button 
-                onClick={() => toggleApplicationsExpansion(job.id)}
-                className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-green-200 text-green-800 rounded-md text-sm font-semibold cursor-default flex-1 flex items-center justify-center"
               >
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                  Applications ({getApplicationsForJob(job.id).length})
-                </div>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-4 w-4 text-gray-600 transition-transform ${isApplicationsExpanded(job.id) ? 'rotate-180' : ''}`} 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5"></path>
                 </svg>
+                Applied
               </button>
-              
-              {isApplicationsExpanded(job.id) && (
-                <div className="mt-3 space-y-3">
-                  {getApplicationsForJob(job.id).map(application => (
-                    <div key={application.id} className="bg-gray-50 p-4 rounded-md border border-gray-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="font-semibold">{application.applicantName}</div>
-                          <div className="text-xs text-gray-500">Applied: {application.appliedDate}</div>
-                        </div>
-                        <Badge className={`
-                          ${application.status === 'approved' ? 'bg-green-500' : 
-                            application.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'}
-                        `}>
-                          {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
-                        <div>
-                          <span className="font-medium">Email:</span> {application.email}
-                        </div>
-                        <div>
-                          <span className="font-medium">Phone:</span> {application.phone}
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs text-gray-600 mb-3">
-                        <span className="font-medium">Experience:</span> {application.experience}
-                      </div>
-                      
-                      <details className="mb-3">
-                        <summary className="text-xs font-medium text-blue-600 cursor-pointer">View Cover Letter</summary>
-                        <div className="mt-2 p-3 bg-white rounded border text-xs text-gray-700">
-                          {application.coverLetter}
-                        </div>
-                      </details>
-                      
-                      <div className="text-xs mb-3">
-                        <span className="font-medium">Resume:</span> 
-                        <a href="#" className="text-blue-600 ml-1 hover:underline">{application.resume}</a>
-                      </div>
-                      
-                      {application.status === 'pending' && (
-                        <div className="flex space-x-2 mt-3">
-                          <button 
-                            onClick={() => updateApplicationStatus(application.id, 'approved')}
-                            className="px-3 py-1.5 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-1"
-                          >
-                            Approve
-                          </button>
-                          <button 
-                            onClick={() => updateApplicationStatus(application.id, 'rejected')}
-                            className="px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 flex-1"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-4 pt-4 border-t">
-              <div className="text-center text-sm text-gray-500 py-3">
-                No applications received yet
-              </div>
-            </div>
+            ) : (
+              <button 
+                className="px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors flex-1"
+                onClick={() => openApplicationModal(normalizedJob)}
+              >
+                Apply Now
+              </button>
+            )
           )}
-        </>
-      )}
-    </div>
-  );
+          
+          {showEdit && (
+            <button 
+              className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors flex-1"
+              onClick={() => openEditModal(normalizedJob)}
+            >
+              Edit
+            </button>
+          )}
+          
+          {showDelete && (
+            <button 
+              className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-colors flex-1"
+              onClick={() => handleDeleteJob(getMongoId(normalizedJob))}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+        
+        {showApplications && (
+          <>
+            {getApplicationsForJob(job.id).length > 0 ? (
+              <div className="mt-4 pt-4 border-t">
+                <button 
+                  onClick={() => toggleApplicationsExpansion(job.id)}
+                  className="flex items-center justify-between w-full py-2 px-4 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    Applications ({getApplicationsForJob(job.id).length})
+                  </div>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-4 w-4 text-gray-600 transition-transform ${isApplicationsExpanded(job.id) ? 'rotate-180' : ''}`} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                
+                {isApplicationsExpanded(job.id) && (
+                  <div className="mt-3 space-y-3">
+                    {getApplicationsForJob(job.id).map(application => (
+                      <div key={application.id} className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-semibold">{application.applicantName}</div>
+                            <div className="text-xs text-gray-500">Applied: {application.appliedDate}</div>
+                          </div>
+                          <Badge className={`
+                            ${application.status === 'approved' ? 'bg-green-500' : 
+                              application.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'}
+                          `}>
+                            {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
+                          <div>
+                            <span className="font-medium">Email:</span> {application.email}
+                          </div>
+                          <div>
+                            <span className="font-medium">Phone:</span> {application.phone}
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-600 mb-3">
+                          <span className="font-medium">Experience:</span> {application.experience}
+                        </div>
+                        
+                        <details className="mb-3">
+                          <summary className="text-xs font-medium text-blue-600 cursor-pointer">View Cover Letter</summary>
+                          <div className="mt-2 p-3 bg-white rounded border text-xs text-gray-700">
+                            {application.coverLetter}
+                          </div>
+                        </details>
+                        
+                        <div className="text-xs mb-3">
+                          <span className="font-medium">Resume:</span> 
+                          <a href="#" className="text-blue-600 ml-1 hover:underline">{application.resume}</a>
+                        </div>
+                        
+                        {application.status === 'pending' && (
+                          <div className="flex space-x-2 mt-3">
+                            <button 
+                              onClick={() => handleUpdateApplicationStatus(application.id, 'approved')}
+                              className="px-3 py-1.5 text-xs bg-green-500 text-white rounded hover:bg-green-600 flex-1"
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleUpdateApplicationStatus(application.id, 'rejected')}
+                              className="px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 flex-1"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="mt-4 pt-4 border-t">
+                <div className="text-center text-sm text-gray-500 py-3">
+                  No applications received yet
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Add a new useEffect to automatically add mock data when the component loads
+  useEffect(() => {
+    // Only add mock data if we haven't already
+    if (!mockDataAdded) {
+      // Create mock job data
+      const mockJobs = [
+        {
+          _id: 'mock-job-id-1',
+          id: 'mock-job-id-1',
+          jobTitle: 'Handcraft Artisan',
+          companyName: 'Traditional Crafts Cooperative',
+          location: 'Kandy',
+          salary: 45000,
+          jobDescription: 'We are looking for skilled artisans to create traditional Sri Lankan handicrafts. Experience with batik, wood carving, or pottery is preferred. This position involves creating high-quality items for both local markets and tourism industry.',
+          category: 'Crafts',
+          postedDate: new Date().toLocaleDateString(),
+          applications: [
+            {
+              id: 'mock-app-1',
+              applicantName: 'Rohan Silva',
+              email: 'rohan.silva@example.com',
+              phone: '0712-345-6789',
+              experience: 'Over 5 years experience in traditional batik techniques and pottery crafting.',
+              coverLetter: 'I am deeply passionate about preserving traditional Sri Lankan crafts and have been practicing these art forms since my youth. I would love to bring my expertise to your cooperative.',
+              resume: 'rohan-silva-resume.pdf',
+              status: 'pending',
+              appliedDate: '2023-06-15',
+              jobId: 'mock-job-id-1'
+            },
+            {
+              id: 'mock-app-2',
+              applicantName: 'Malini Fernando',
+              email: 'malini.f@example.com',
+              phone: '0723-456-7890',
+              experience: '3 years of experience in wood carving and mask making techniques. Completed certification in traditional crafts.',
+              coverLetter: 'Having worked with several craft organizations in the past, I believe my skills in traditional wood carving would be a valuable addition to your team. I am eager to contribute to preserving our cultural heritage.',
+              resume: 'malini-fernando-resume.pdf',
+              status: 'approved',
+              appliedDate: '2023-06-18',
+              jobId: 'mock-job-id-1'
+            }
+          ]
+        },
+        {
+          _id: 'mock-job-id-2',
+          id: 'mock-job-id-2',
+          jobTitle: 'Sustainable Farming Specialist',
+          companyName: 'Green Earth Agricultural Collective',
+          location: 'Anuradhapura',
+          salary: 52000,
+          jobDescription: 'Seeking an experienced farming specialist with knowledge of sustainable agricultural practices. The role involves training local farmers on organic farming techniques, water conservation, and crop rotation strategies to improve yield while maintaining ecological balance.',
+          category: 'Agriculture',
+          postedDate: new Date().toLocaleDateString(),
+          applications: [
+            {
+              id: 'mock-app-3',
+              applicantName: 'Anura Perera',
+              email: 'anura.p@example.com',
+              phone: '0756-789-0123',
+              experience: '7 years working with agricultural NGOs on sustainable farming initiatives across Sri Lanka. Certified in permaculture design.',
+              coverLetter: 'I have dedicated my career to promoting sustainable farming methods. My experience working with various farmer cooperatives has given me insights into how traditional knowledge can be combined with modern techniques for optimal results.',
+              resume: 'anura-perera-resume.pdf',
+              status: 'pending',
+              appliedDate: '2023-07-02',
+              jobId: 'mock-job-id-2'
+            },
+            {
+              id: 'mock-app-4',
+              applicantName: 'Kamala Bandara',
+              email: 'kamala.b@example.com',
+              phone: '0778-901-2345',
+              experience: '4 years of experience in agricultural extension services, specializing in water management and organic pest control methods.',
+              coverLetter: 'With a background in both traditional farming and modern sustainable practices, I can bridge the gap between old and new approaches. I\'m passionate about empowering local farmers with knowledge that can improve their livelihoods while protecting our environment.',
+              resume: 'kamala-bandara-resume.pdf',
+              status: 'rejected',
+              appliedDate: '2023-07-05',
+              jobId: 'mock-job-id-2'
+            }
+          ]
+        }
+      ];
+    
+      // Add mock jobs to my jobs list
+      setMyJobs([...myJobs, ...mockJobs]);
+      
+      // Add mock applications to applications state
+      const allMockApplications = [
+        ...mockJobs[0].applications,
+        ...mockJobs[1].applications
+      ];
+      setApplications([...applications, ...allMockApplications]);
+      
+      // Expand applications sections to show the data
+      setTimeout(() => {
+        mockJobs.forEach(job => {
+          setExpandedJobApplications(prev => ({
+            ...prev,
+            [job.id]: true // Force expand to show applications
+          }));
+        });
+      }, 100);
+      
+      // Mark as added so we don't add duplicates
+      setMockDataAdded(true);
+      
+      console.log('Mock job listings added automatically');
+    }
+  }, [mockDataAdded]); // Only depend on mockDataAdded state to prevent re-adding
 
   return (
     <div className="max-w-6xl mx-auto p-4 font-sans">
@@ -931,7 +1295,14 @@ const JobPortal = () => {
       <Tabs 
         defaultValue="all" 
         className="mb-6"
-        onValueChange={setActiveTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          
+          // Refresh my jobs when switching to myjobs tab
+          if (value === 'myjobs') {
+            refreshMyJobs();
+          }
+        }}
       >
         <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="all">All Opportunities</TabsTrigger>
@@ -1004,12 +1375,14 @@ const JobPortal = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">My Job Listings ({myJobs.length})</h2>
-              <button 
-                onClick={openModal}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
-              >
-                Post New Job
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={openModal}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors"
+                >
+                  Post New Job
+                </button>
+              </div>
             </div>
             
             {myJobs.length > 0 ? (
@@ -1070,6 +1443,26 @@ const JobPortal = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Show loading state */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+      
+      {/* Show error message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md my-4">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="text-sm font-medium underline mt-2"
+          >
+            Refresh the page
+          </button>
+        </div>
+      )}
       
       {/* Modal Popup */}
       {isModalOpen && (

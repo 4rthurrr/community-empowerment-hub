@@ -99,7 +99,9 @@ const logoutUser = (req, res) => {
 
 //auth middleware
 const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token;
+  // Get token from cookies or Authorization header
+  const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
+  
   if (!token)
     return res.status(401).json({
       success: false,
@@ -109,6 +111,12 @@ const authMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
     req.user = decoded;
+    
+    // Optional: fetch complete user info if needed
+    // const user = await User.findById(decoded.id).select('-password');
+    // if (!user) return res.status(401).json({ success: false, message: "User not found!" });
+    // req.user = {...decoded, ...user.toObject()};
+    
     next();
   } catch (error) {
     res.status(401).json({

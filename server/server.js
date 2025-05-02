@@ -17,6 +17,10 @@ const shopReviewRouter = require("./routes/shop/review-routes");
 const commonFeatureRouter = require("./routes/common/feature-routes");
 const shopPortfolioRouter = require("./routes/shop/portfolio-routes");
 
+// Import job portal routes
+const jobRoutes = require('./routes/jobRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
+
 console.log("Connecting to MongoDB...");
 
 mongoose
@@ -77,5 +81,9 @@ app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/common/feature", commonFeatureRouter);
 app.use("/api/shop/portfolio", shopPortfolioRouter);
+
+// Apply job portal routes
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
