@@ -9,9 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { AlertCircle, Camera, Check, Edit, Lock, UserCircle, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Trash2 } from "lucide-react";
+import { 
+  AlertCircle, 
+  Camera, 
+  Check, 
+  Edit, 
+  Lock, 
+  UserCircle, 
+  X, 
+  Eye, 
+  EyeOff 
+} from "lucide-react";
 
 function ProfileSettings() {
   const { user } = useSelector((state) => state.auth);
@@ -36,6 +47,11 @@ function ProfileSettings() {
     confirmPassword: "",
   });
   
+  //state for password visibility
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // State for notification preferences
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: user?.emailNotifications || true,
@@ -564,24 +580,38 @@ function ProfileSettings() {
               )}
               
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">
-                    Current Password <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="currentPassword"
-                    name="currentPassword"
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    className={passwordErrors.currentPassword ? "border-red-500" : ""}
-                  />
-                  {passwordErrors.currentPassword && (
-                    <p className="text-sm text-red-500">{passwordErrors.currentPassword}</p>
-                  )}
-                </div>
+  {/* Current Password Field with Eye Icon */}
+  <div className="space-y-2">
+    <Label htmlFor="currentPassword">
+      Current Password <span className="text-red-500">*</span>
+    </Label>
+    <div className="relative">
+      <Input
+        id="currentPassword"
+        name="currentPassword"
+        type={showCurrentPassword ? "text" : "password"}
+        value={passwordData.currentPassword}
+        onChange={handlePasswordChange}
+        className={passwordErrors.currentPassword ? "border-red-500" : ""}
+      />
+      <button
+        type="button"
+        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+      >
+        {showCurrentPassword ? (
+          <EyeOff className="h-5 w-5" />
+        ) : (
+          <Eye className="h-5 w-5" />
+        )}
+      </button>
+    </div>
+    {passwordErrors.currentPassword && (
+      <p className="text-sm text-red-500">{passwordErrors.currentPassword}</p>
+    )}
+  </div>
                 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="newPassword">
                     New Password <span className="text-red-500">*</span>
                   </Label>
@@ -601,47 +631,104 @@ function ProfileSettings() {
                       Password must be at least 8 characters and include uppercase, lowercase letters, and numbers
                     </p>
                   )}
-                </div>
+                </div> */}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">
-                    Confirm New Password <span className="text-red-500">*</span>
-                  </Label>
+                <Label htmlFor="newPassword">
+                  New Password <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className={passwordErrors.newPassword ? "border-red-500" : ""}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                {passwordErrors.newPassword && (
+                  <p className="text-sm text-red-500">{passwordErrors.newPassword}</p>
+                )}
+                {!passwordErrors.newPassword && (
+                  <p className="text-xs text-gray-500">
+                    Password must be at least 8 characters and include uppercase, lowercase letters, and numbers
+                  </p>
+                )}
+              </div>
+              
+                {/* Confirm Password Field with Eye Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">
+                  Confirm New Password <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={passwordData.confirmPassword}
                     onChange={handlePasswordChange}
                     className={passwordErrors.confirmPassword ? "border-red-500" : ""}
                   />
-                  {passwordErrors.confirmPassword && (
-                    <p className="text-sm text-red-500">{passwordErrors.confirmPassword}</p>
-                  )}
-                </div>
-                
-                <div className="pt-2">
-                  <Button
-                    onClick={handlePasswordSubmit}
-                    disabled={isPasswordSubmitting}
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
                   >
-                    {isPasswordSubmitting ? "Updating..." : "Update Password"}
-                  </Button>
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
+                {passwordErrors.confirmPassword && (
+                  <p className="text-sm text-red-500">{passwordErrors.confirmPassword}</p>
+                )}
+              </div>
+
               </div>
               
               <Separator className="my-6" />
               
               <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
-              
-              <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+  <Button 
+    variant="default" 
+    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
+  >
+    <Download className="mr-2 h-4 w-4" />
+    Download Personal Data
+  </Button>
+
+  <Button 
+    variant="destructive" 
+    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white hover:text-white"
+  >
+    <Trash2 className="mr-2 h-4 w-4" />
+    Deactivate Account
+  </Button>
+</div>
+              {/* <div className="space-y-4">
                 <button className="text-sm text-blue-600 hover:underline">
                   Download Personal Data
                 </button>
                 <button className="text-sm text-red-600 hover:underline">
                   Deactivate Account
                 </button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>

@@ -298,6 +298,7 @@ function AdminProducts() {
   }, [currentEditedId, formData]);
 
   return (
+    /*Add product*/
     <Fragment>
       {/* Page Header with Stats */}
       <div className="flex flex-col gap-5 mb-6">
@@ -305,7 +306,7 @@ function AdminProducts() {
           <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
           <Button onClick={() => setOpenCreateProductsDialog(true)} className="gap-2 bg-blue-600 hover:bg-blue-700">
             <Plus size={18} />
-            <span>Add New Product</span>
+            <span>Add New Product</span> /*Add product*/
           </Button>
         </div>
         
