@@ -5,6 +5,7 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Star, Award, TrendingUp, Store, MapPin, Users, Calendar, ExternalLink } from "lucide-react";
+import DonationButton from './donation-button';
 
 const SellerPortfolioModal = ({ open, setOpen, sellerInfo }) => {
   const [loading, setLoading] = useState(true);
@@ -222,6 +223,13 @@ const validateProductForm = () => {
                 <Button variant="outline" className="mt-4 w-full">
                   View Full Profile
                 </Button>
+                <DonationButton 
+                  seller={{
+                    id: sellerData?.id,
+                    name: sellerData?.name
+                  }}
+                  className="mt-2 w-full"
+                />
               </div>
               
               <div className="md:w-3/4">

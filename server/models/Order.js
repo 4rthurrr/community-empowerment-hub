@@ -28,6 +28,10 @@ const OrderSchema = new mongoose.Schema({
   orderUpdateDate: Date,
   paymentId: String,
   payerId: String,
+  donationAmount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("Order", OrderSchema);
