@@ -1,13 +1,18 @@
 const express = require("express");
-
+const router = express.Router();
 const {
   addProductReview,
   getProductReviews,
+  checkUserReview,
 } = require("../../controllers/shop/product-review-controller");
 
-const router = express.Router();
+// Add a review
+router.post("/", addProductReview);
 
-router.post("/add", addProductReview);
+// Get reviews for a product
 router.get("/:productId", getProductReviews);
+
+// Check if user has reviewed a product
+router.get("/check", checkUserReview);
 
 module.exports = router;

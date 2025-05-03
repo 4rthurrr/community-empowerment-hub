@@ -1,7 +1,7 @@
 import { StarIcon, Store, UserCircle, Package, Award, Calendar, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { useDispatch, useSelector } from "react-redux";
@@ -72,6 +72,32 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
   }
 
   function handleAddReview() {
+    // Validate inputs before submission
+    if (rating === 0) {
+      toast({
+        title: "Please select a rating",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!reviewMsg.trim()) {
+      toast({
+        title: "Please enter a review message",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if user is logged in
+    if (!user || !user.id) {
+      toast({
+        title: "Please login to add a review",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     dispatch(
       addReview({
         productId: productDetails?._id,
@@ -80,16 +106,31 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
         reviewMessage: reviewMsg,
         reviewValue: rating,
       })
-    ).then((data) => {
-      if (data.payload.success) {
-        setRating(0);
-        setReviewMsg("");
-        dispatch(getReviews(productDetails?._id));
+    )
+      .unwrap() // Use unwrap() to properly handle the promise
+      .then((data) => {
+        if (data.success) {
+          setRating(0);
+          setReviewMsg("");
+          dispatch(getReviews(productDetails?._id));
+          toast({
+            title: "Review added successfully!",
+          });
+        } else {
+          toast({
+            title: data.message || "Failed to add review",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((err) => {
         toast({
-          title: "Review added successfully!",
+          title: err.message || "Error submitting review",
+          description: "Please try again later",
+          variant: "destructive",
         });
-      }
-    });
+        console.error("Review submission error:", err);
+      });
   }
 
   // Open the seller portfolio modal
@@ -117,6 +158,11 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
     <>
       <Dialog open={open} onOpenChange={handleDialogClose}>
         <DialogContent className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:p-12 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
+          <DialogTitle className="sr-only">Product Details: {productDetails?.title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Detailed information about {productDetails?.title} including price, description, and reviews.
+          </DialogDescription>
+          
           <div className="relative overflow-hidden rounded-lg">
             <img
               src={productDetails?.image}
@@ -229,7 +275,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
                 />
                 <Button
                   onClick={handleAddReview}
-                  disabled={reviewMsg.trim() === ""}
+                  disabled={reviewMsg.trim() === "" || rating === 0}
                 >
                   Submit
                 </Button>

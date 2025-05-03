@@ -121,9 +121,25 @@ const JobPortal = () => {
     const savedWishlist = localStorage.getItem('jobWishlist');
     if (savedWishlist) {
       try {
-        setWishlist(JSON.parse(savedWishlist));
+        const parsedWishlist = JSON.parse(savedWishlist);
+        
+        // Validate wishlist items - make sure they have required fields
+        const validWishlist = parsedWishlist.filter(item => {
+          return item && (item.id || item._id) && item.jobTitle && item.companyName;
+        });
+        
+        setWishlist(validWishlist);
+        
+        // If invalid items were filtered out, update localStorage
+        if (validWishlist.length !== parsedWishlist.length) {
+          console.log('Removed invalid wishlist items during load');
+          localStorage.setItem('jobWishlist', JSON.stringify(validWishlist));
+        }
       } catch (err) {
         console.error('Error parsing wishlist from localStorage:', err);
+        // Reset wishlist if corrupted
+        localStorage.removeItem('jobWishlist');
+        setWishlist([]);
       }
     }
   }, []);
@@ -398,7 +414,7 @@ const JobPortal = () => {
     }
   };
   
-  // Modify handleDeleteJob function to handle mock data
+  // Modify handleDeleteJob function to improve wishlist handling
   const handleDeleteJob = async (jobId) => {
     // Make sure we have the MongoDB _id
     const mongoId = jobId._id || jobId;
@@ -425,10 +441,21 @@ const JobPortal = () => {
         const updatedMyJobs = myJobs.filter(job => getMongoId(job) !== mongoId);
         setMyJobs(updatedMyJobs);
         
-        // Remove from wishlist if present
-        if (wishlist.some(job => getMongoId(job) === mongoId)) {
-          const updatedWishlist = wishlist.filter(job => getMongoId(job) !== mongoId);
+        // Remove from filtered jobs
+        const updatedFilteredJobs = filteredJobs.filter(job => getMongoId(job) !== mongoId);
+        setFilteredJobs(updatedFilteredJobs);
+        
+        // Remove from wishlist if present - using string comparison for reliability
+        const stringJobId = String(mongoId);
+        const updatedWishlist = wishlist.filter(job => 
+          String(job.id || job._id) !== stringJobId
+        );
+        
+        // Only update wishlist if it changed
+        if (updatedWishlist.length !== wishlist.length) {
           setWishlist(updatedWishlist);
+          // Update localStorage with the new wishlist
+          localStorage.setItem('jobWishlist', JSON.stringify(updatedWishlist));
         }
         
         // Remove applications for this job
@@ -453,29 +480,42 @@ const JobPortal = () => {
   
   // Toggle wishlist status
   const toggleWishlist = (job) => {
-    // Normalize the job object to ensure consistent ID handling
-    const normalizedJob = normalizeJob(job);
-    const jobId = normalizedJob.id;
-    
-    console.log('Toggle wishlist for job:', jobId); // Debug log
-    
-    // Check if this specific job ID is in the wishlist
-    const isInWishlist = wishlist.some(item => String(item.id) === String(jobId));
-    
-    if (isInWishlist) {
-      // Remove this specific job from wishlist
-      const updatedWishlist = wishlist.filter(item => String(item.id) !== String(jobId));
-      setWishlist(updatedWishlist);
-    } else {
-      // Add this specific job to wishlist
-      setWishlist([...wishlist, normalizedJob]);
+    try {
+      // Normalize the job object to ensure consistent ID handling
+      if (!job || (!job.id && !job._id)) {
+        console.error('Invalid job object passed to toggleWishlist:', job);
+        return;
+      }
+      
+      const normalizedJob = normalizeJob(job);
+      const jobId = normalizedJob.id;
+      
+      console.log('Toggle wishlist for job:', jobId); // Debug log
+      
+      // Check if this specific job ID is in the wishlist
+      const isInWishlist = wishlist.some(item => String(item.id) === String(jobId));
+      
+      if (isInWishlist) {
+        // Remove this specific job from wishlist
+        const updatedWishlist = wishlist.filter(item => String(item.id) !== String(jobId));
+        setWishlist(updatedWishlist);
+        localStorage.setItem('jobWishlist', JSON.stringify(updatedWishlist));
+      } else {
+        // Add this specific job to wishlist
+        const updatedWishlist = [...wishlist, normalizedJob];
+        setWishlist(updatedWishlist);
+        localStorage.setItem('jobWishlist', JSON.stringify(updatedWishlist));
+      }
+    } catch (error) {
+      console.error('Error in toggleWishlist:', error);
     }
   };
   
   // Check if a job is in wishlist - use string comparison for reliable matching
   const isJobInWishlist = (jobId) => {
     if (!jobId) return false;
-    return wishlist.some(job => String(job.id) === String(jobId));
+    // Convert both IDs to strings for comparison
+    return wishlist.some(job => String(job.id || job._id) === String(jobId));
   };
   
   // Apply search and filters
@@ -483,14 +523,50 @@ const JobPortal = () => {
     try {
       setIsLoading(true);
       
-      const filters = {
-        search: searchTerm,
-        location: locationFilter,
-        category: categoryFilter
-      };
+      // Try to fetch filtered jobs from the API first
+      if (localStorage.getItem('token')) {
+        try {
+          const filters = {
+            search: searchTerm,
+            location: locationFilter,
+            category: categoryFilter
+          };
+          
+          const filteredJobs = await fetchAllJobs(filters);
+          setFilteredJobs(filteredJobs);
+          setIsLoading(false);
+          return; // Exit early if API call succeeds
+        } catch (err) {
+          console.warn('API filtering failed, falling back to client-side filtering', err);
+          // Continue to client-side filtering
+        }
+      }
       
-      const filteredJobs = await fetchAllJobs(filters);
-      setFilteredJobs(filteredJobs);
+      // Client-side filtering as fallback
+      let results = [...jobs];
+      
+      // Apply search term filter (case-insensitive)
+      if (searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase().trim();
+        results = results.filter(job => 
+          job.jobTitle.toLowerCase().includes(searchLower) || 
+          job.companyName.toLowerCase().includes(searchLower) || 
+          job.jobDescription.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Apply location filter
+      if (locationFilter) {
+        results = results.filter(job => job.location === locationFilter);
+      }
+      
+      // Apply category filter
+      if (categoryFilter) {
+        results = results.filter(job => job.category === categoryFilter);
+      }
+      
+      // Update state with filtered results
+      setFilteredJobs(results);
     } catch (err) {
       console.error('Error applying filters:', err);
       setError('Failed to filter job opportunities. Please try again later.');
@@ -1276,6 +1352,34 @@ const JobPortal = () => {
     }
   }, [mockDataAdded]); // Only depend on mockDataAdded state to prevent re-adding
 
+  // Add this function to the component, after other functions but before the return statement
+  const cleanupWishlist = () => {
+    try {
+      // Create a set of valid job IDs currently in the system
+      const validJobIds = new Set(jobs.map(job => String(job.id || job._id)));
+      
+      // Filter the wishlist to remove any jobs whose IDs are not in the valid set
+      const cleanedWishlist = wishlist.filter(wishlistJob => {
+        const wishlistJobId = String(wishlistJob.id || wishlistJob._id);
+        return validJobIds.has(wishlistJobId);
+      });
+      
+      // Only update if there's a difference
+      if (cleanedWishlist.length !== wishlist.length) {
+        console.log(`Cleaned up wishlist: Removed ${wishlist.length - cleanedWishlist.length} invalid entries`);
+        setWishlist(cleanedWishlist);
+        // Update localStorage with cleaned wishlist
+        localStorage.setItem('jobWishlist', JSON.stringify(cleanedWishlist));
+        alert(`Removed ${wishlist.length - cleanedWishlist.length} invalid job(s) from your wishlist.`);
+      } else {
+        alert('Your wishlist is already up to date.');
+      }
+    } catch (error) {
+      console.error('Error in cleanupWishlist:', error);
+      alert('An error occurred while refreshing your wishlist.');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4 font-sans">
       <div className="text-center mb-8">
@@ -1417,7 +1521,17 @@ const JobPortal = () => {
         <TabsContent value="wishlist">
           {/* Wishlist */}
           <div>
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Saved Opportunities ({wishlist.length})</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Saved Opportunities ({wishlist.length})</h2>
+              {wishlist.length > 0 && (
+                <button 
+                  onClick={cleanupWishlist}
+                  className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                >
+                  Refresh Wishlist
+                </button>
+              )}
+            </div>
             
             {wishlist.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

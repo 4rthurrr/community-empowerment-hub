@@ -333,15 +333,15 @@ const validateProductForm = () => {
 // Mock data for demonstration
 const mockSellerData = {
   id: "seller123",
-  name: "Sri Lankan Artisan Collective",
+  name: "Dulmi Witharana",
   location: "Kandy, Sri Lanka",
-  bio: "We are a cooperative of 12 skilled artisans from the central highlands of Sri Lanka. Our collective specializes in traditional pottery, handloom textiles, and woodcraft using techniques passed down through generations. We work with sustainable materials and traditional methods to create authentic Sri Lankan crafts.",
-  profileImage: "https://images.unsplash.com/photo-1590422749897-47ccfcb68283?q=80&w=500&auto=format&fit=crop",
-  rating: 4.8,
-  reviewCount: 136,
-  memberSince: "June 2022",
-  groupSize: 12,
-  specialties: ["Traditional Pottery", "Natural Dyes", "Handloom Textiles", "Woodcraft", "Heritage Designs"],
+  bio: "I am a skilled artisan from the central highlands of Sri Lanka with over 15 years of experience. I specialize in traditional pottery, handloom textiles, and intricate batik art using techniques passed down through generations in my family. I work with sustainable materials and traditional methods to create authentic Sri Lankan crafts that tell stories of our rich heritage.",
+  profileImage: "https://images.unsplash.com/photo-1626371353531-d9d1cf3a9533?q=80&w=500&auto=format&fit=crop",
+  rating: 4.9,
+  reviewCount: 87,
+  memberSince: "March 2021",
+  groupSize: 3,
+  specialties: ["Batik Art", "Traditional Pottery", "Natural Dyes", "Handloom Textiles", "Heritage Designs"],
   certificationType: "Fair Trade Certified",
   sustainable: true,
   communityFocused: true,
@@ -349,25 +349,25 @@ const mockSellerData = {
     featured: [
       {
         id: "p1",
-        name: "Hand-painted Clay Pottery Set",
-        price: 5200,
+        name: "Hand-painted Clay Tea Set",
+        price: 4800,
         category: "Pottery",
         image: "https://images.unsplash.com/photo-1605883705077-8d3d3cebe78c?q=80&w=500&auto=format&fit=crop",
         isFeatured: true
       },
       {
         id: "p2",
-        name: "Traditional Batik Wall Hanging",
-        price: 7800,
+        name: "Batik Silk Wall Hanging",
+        price: 7500,
         category: "Textiles",
         image: "https://images.unsplash.com/photo-1603031543919-74f8e4d51599?q=80&w=500&auto=format&fit=crop",
         isFeatured: true
       },
       {
         id: "p3",
-        name: "Handcrafted Wooden Sculptures",
-        price: 3500,
-        category: "Woodcraft",
+        name: "Handwoven Cotton Saree",
+        price: 8900,
+        category: "Textiles",
         image: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=500&auto=format&fit=crop",
         isFeatured: true
       }
@@ -375,24 +375,24 @@ const mockSellerData = {
     bestsellers: [
       {
         id: "p4",
-        name: "Organic Spice Gift Box",
-        price: 2800,
+        name: "Kandyan Spice Collection Box",
+        price: 2500,
         category: "Culinary",
         image: "https://images.unsplash.com/photo-1532336414046-2a47b2a97430?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
       },
       {
         id: "p5",
-        name: "Handmade Coconut Oil Soap",
-        price: 450,
+        name: "Ayurvedic Bath & Body Set",
+        price: 3200,
         category: "Personal Care",
         image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
       },
       {
         id: "p6",
-        name: "Hand-embroidered Table Runner",
-        price: 3200,
+        name: "Hand-embroidered Table Linen Set",
+        price: 4700,
         category: "Textiles",
         image: "https://images.unsplash.com/photo-1584811644165-33078f50eb15?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
@@ -401,24 +401,24 @@ const mockSellerData = {
     recent: [
       {
         id: "p7",
-        name: "Ceramic Hanging Planters",
-        price: 1800,
-        category: "Pottery",
+        name: "Batik Cotton Face Masks",
+        price: 850,
+        category: "Accessories",
         image: "https://images.unsplash.com/photo-1595434091143-b375ced5fe5c?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
       },
       {
         id: "p8",
-        name: "Recycled Paper Notebooks",
-        price: 650,
-        category: "Stationery",
+        name: "Handcrafted Teak Jewelry Box",
+        price: 3800,
+        category: "Home Decor",
         image: "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
       },
       {
         id: "p9",
-        name: "Palm Leaf Woven Baskets",
-        price: 1200,
+        name: "Kithul Palm Woven Table Mats",
+        price: 1400,
         category: "Home Decor",
         image: "https://images.unsplash.com/photo-1595964370363-2c54ca62db9d?q=80&w=500&auto=format&fit=crop",
         isFeatured: false
