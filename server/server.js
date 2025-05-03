@@ -88,4 +88,6 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/user', userRouter);
 
+app.use("/api/reviews", require("./routes/shop/review-routes"));
+
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));

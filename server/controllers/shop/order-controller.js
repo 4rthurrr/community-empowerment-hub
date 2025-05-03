@@ -199,9 +199,52 @@ const getOrderDetails = async (req, res) => {
   }
 };
 
+const canReviewProduct = async (req, res) => {
+  try {
+    const { userId, productId } = req.query;
+    
+    if (!userId || !productId) {
+      return res.status(400).json({
+        success: false,
+        canReview: false,
+        message: "Missing user ID or product ID"
+      });
+    }
+
+    // Check if user has purchased this product with confirmed or delivered status
+    const order = await Order.findOne({
+      userId,
+      "cartItems.productId": productId,
+      orderStatus: { $in: ["confirmed", "delivered"] },
+    });
+
+    if (!order) {
+      return res.status(200).json({
+        success: false,
+        canReview: false,
+        message: "You need to purchase and receive this product before reviewing it"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      canReview: true,
+      message: "You can review this product"
+    });
+  } catch (error) {
+    console.error("Error checking review eligibility:", error);
+    return res.status(500).json({
+      success: false,
+      canReview: false,
+      message: "Error checking review eligibility"
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   capturePayment,
   getAllOrdersByUser,
   getOrderDetails,
+  canReviewProduct,
 };

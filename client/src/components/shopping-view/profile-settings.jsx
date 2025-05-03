@@ -30,6 +30,7 @@ import {
   deactivateAccount,
   uploadProfileImage
 } from "@/services/userService";
+import SellerProducts from '@/components/shopping-view/seller-products';
 
 function ProfileSettings() {
   const { user: authUser } = useSelector((state) => state.auth);
@@ -559,6 +560,10 @@ function ProfileSettings() {
           <TabsTrigger value="general">General Information</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          {/* Add the seller products tab, only visible for sellers */}
+          {authUser?.role === 'seller' && (
+            <TabsTrigger value="products">My Products</TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="general">
@@ -1019,6 +1024,13 @@ function ProfileSettings() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {/* New tab for seller products */}
+        {authUser?.role === 'seller' && (
+          <TabsContent value="products">
+            <SellerProducts />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
