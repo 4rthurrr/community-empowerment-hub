@@ -42,6 +42,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
+import { Printer } from "lucide-react";
+
 const SellerPortfolio = () => {
   const { toast } = useToast();
   const [portfolioData, setPortfolioData] = useState({
@@ -316,17 +318,109 @@ const SellerPortfolio = () => {
     );
   }
 
+  const generateReport = () => {
+    const printWindow = window.open('', '_blank');
+    const reportDate = new Date().toLocaleDateString();
+    
+    const reportContent = `
+      <html>
+        <head>
+          <title>Product Portfolio Report - ${reportDate}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 2rem; }
+            h1 { color: #1a365d; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+            table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+            th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+            th { background-color: #f7fafc; }
+            .category-header { background-color: #2d3748; color: white; padding: 0.5rem; margin-top: 2rem; }
+            .totals { margin-top: 2rem; padding: 1rem; background-color: #f7fafc; }
+            @media print { 
+              .no-print { display: none; } 
+              body { margin: 1cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Product Portfolio Report - ${reportDate}</h1>
+          
+          ${Object.entries(portfolioData).map(([category, products]) => `
+            <div class="category-section">
+              <div class="category-header">${category.replace(/([A-Z])/g, ' $1').toUpperCase()}</div>
+              ${products.length > 0 ? `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Price</th>
+                      <th>Units Sold</th>
+                      <th>Rating</th>
+                      <th>Reviews</th>
+                      <th>Craft Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${products.map(product => `
+                      <tr>
+                        <td>${product.name}</td>
+                        <td>${formatPrice(product.price)}</td>
+                        <td>${product.sold}</td>
+                        <td>${product.rating}/5</td>
+                        <td>${product.reviews}</td>
+                        <td>${product.craftType}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : '<p>No products in this category</p>'}
+            </div>
+          `).join('')}
+  
+          <div class="totals">
+            <h3>Portfolio Summary</h3>
+            <p>Total Products: ${Object.values(portfolioData).reduce((acc, curr) => acc + curr.length, 0)}</p>
+            <p>Total Potential Revenue: ${formatPrice(
+              Object.values(portfolioData).flat().reduce((acc, product) => acc + (product.price * product.sold), 0)
+            )}</p>
+            <p>Average Rating: ${(
+              Object.values(portfolioData).flat().reduce((acc, product) => acc + product.rating, 0) /
+              Object.values(portfolioData).flat().filter(p => p.rating > 0).length || 0
+            ).toFixed(1)}/5</p>
+          </div>
+  
+          <div class="no-print" style="margin-top: 2rem; text-align: center;">
+            <button onclick="window.print()" style="padding: 0.5rem 1rem; background: #4299e1; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Print Report
+            </button>
+          </div>
+        </body>
+      </html>
+    `;
+  
+    printWindow.document.write(reportContent);
+    printWindow.document.close();
+  };
+  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">My Product Portfolio</h2>
-          <p className="text-gray-500">Showcase your best creations to potential customers</p>
-        </div>
-        <Button onClick={handleAddProduct} className="flex items-center gap-1">
-          <Plus size={16} /> Add Product Portfolio
-        </Button>
-      </div>
+  <div>
+    <h2 className="text-2xl font-bold">My Product Portfolio</h2>
+    <p className="text-gray-500">Showcase your best creations to potential customers</p>
+  </div>
+  <div className="flex gap-2">
+    <Button 
+      onClick={generateReport} 
+      variant="outline" 
+      className="flex items-center gap-1"
+    >
+      <Printer size={16} /> Print Report
+    </Button>
+    <Button onClick={handleAddProduct} className="flex items-center gap-1">
+      <Plus size={16} /> Add Product
+    </Button>
+  </div>
+</div>
       <Tabs defaultValue="topRated" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="topRated" className="flex items-center gap-1">
@@ -714,6 +808,8 @@ const SellerPortfolio = () => {
         </DialogContent>
       </Dialog>
     </div>
+
+    
   );
 };
 
