@@ -20,6 +20,7 @@ const shopPortfolioRouter = require("./routes/shop/portfolio-routes");
 // Import job portal routes
 const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const userRouter = require('./routes/userRoutes');
 
 console.log("Connecting to MongoDB...");
 
@@ -85,5 +86,6 @@ app.use("/api/shop/portfolio", shopPortfolioRouter);
 // Apply job portal routes
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/user', userRouter);
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
