@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { 
   AlertCircle, 
   Camera, 
@@ -917,18 +918,30 @@ function ProfileSettings() {
               </div>
 
               </div>
+
+              <div className="pt-4">
+                <Button 
+                  onClick={handlePasswordSubmit}
+                  disabled={isPasswordSubmitting}
+                  className="w-full bg-primary hover:bg-primary-dark text-white"
+                >
+                  {isPasswordSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </div>
+                  ) : (
+                    "Change Password"
+                  )}
+                </Button>
+              </div>
+
               
               <Separator className="my-6" />
               
               <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-  <Button 
-    variant="default" 
-    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white hover:text-white"
-  >
-    <Download className="mr-2 h-4 w-4" />
-    Download Personal Data
-  </Button>
+  
 
   <Button 
     variant="destructive" 
