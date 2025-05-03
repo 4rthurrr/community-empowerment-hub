@@ -939,18 +939,18 @@ function ProfileSettings() {
               
               <Separator className="my-6" />
               
-              <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
+              {/* <h3 className="text-lg font-semibold mb-4">Account Settings</h3> */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
   
 
-  <Button 
+  {/* <Button 
     variant="destructive" 
     className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white hover:text-white"
     onClick={handleDeactivateAccount}
   >
     <Trash2 className="mr-2 h-4 w-4" />
     Deactivate Account
-  </Button>
+  </Button> */}
 </div>
               {/* <div className="space-y-4">
                 <button className="text-sm text-blue-600 hover:underline">
