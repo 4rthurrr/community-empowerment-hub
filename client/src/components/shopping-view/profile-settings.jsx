@@ -23,21 +23,28 @@ import {
   Eye, 
   EyeOff 
 } from "lucide-react";
+import { 
+  getUserProfile, 
+  updateUserProfile, 
+  updatePassword,
+  deactivateAccount,
+  uploadProfileImage
+} from "@/services/userService";
 
 function ProfileSettings() {
-  const { user } = useSelector((state) => state.auth);
+  const { user: authUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const { toast } = useToast();
   
   // State for general profile info
   const [profileData, setProfileData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    bio: user?.bio || "",
-    location: user?.location || "",
-    profileImage: user?.profileImage || "",
-    interestedCategories: user?.interestedCategories || [],
+    userName: "",
+    email: "",
+    phone: "",
+    bio: "",
+    location: "",
+    profileImage: "",
+    interestedCategories: [],
   });
   
   // State for password change
@@ -54,10 +61,10 @@ function ProfileSettings() {
 
   // State for notification preferences
   const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: user?.emailNotifications || true,
-    orderUpdates: user?.orderUpdates || true,
-    promotions: user?.promotions || false,
-    newsletter: user?.newsletter || false,
+    emailNotifications: true,
+    orderUpdates: true,
+    promotions: false,
+    newsletter: false,
   });
   
   // Form validation errors
@@ -75,6 +82,64 @@ function ProfileSettings() {
   // Image upload preview
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
+  
+  // New loading state for initial data loading
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        setApiError(null);
+        
+        // Fetch user profile
+        const userData = await getUserProfile();
+        
+        // Update form state with user data
+        setProfileData({
+          userName: userData.userName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          bio: userData.bio || "",
+          location: userData.location || "",
+          profileImage: userData.profileImage || "",
+          interestedCategories: userData.interestedCategories || [],
+        });
+        
+        // Update notification settings
+        setNotificationSettings({
+          emailNotifications: userData.emailNotifications !== undefined ? userData.emailNotifications : true,
+          orderUpdates: userData.orderUpdates !== undefined ? userData.orderUpdates : true,
+          promotions: userData.promotions !== undefined ? userData.promotions : false,
+          newsletter: userData.newsletter !== undefined ? userData.newsletter : false,
+        });
+        
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        setApiError("Failed to load your profile data. Please try again later.");
+        
+        // Use auth data as fallback if available
+        if (authUser) {
+          setProfileData({
+            userName: authUser.userName || "",
+            email: authUser.email || "",
+            phone: "",
+            bio: "",
+            location: "",
+            profileImage: "",
+            interestedCategories: [],
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Load user profile when component mounts
+    loadUserProfile();
+  }, [authUser]);
   
   // Handle input changes for profile form
   const handleProfileChange = (e) => {
@@ -159,15 +224,15 @@ function ProfileSettings() {
   const validateProfileForm = () => {
     const errors = {};
     
-    // Name validation
-    if (!profileData.name.trim()) {
-      errors.name = "Name is required";
-    } else if (profileData.name.trim().length < 3) {
-      errors.name = "Name must be at least 3 characters";
+    // UserName validation
+    if (!profileData.userName?.trim()) {
+      errors.userName = "Name is required";
+    } else if (profileData.userName.trim().length < 3) {
+      errors.userName = "Name must be at least 3 characters";
     }
     
     // Email validation
-    if (!profileData.email.trim()) {
+    if (!profileData.email?.trim()) {
       errors.email = "Email is required";
     } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(profileData.email.trim())) {
       errors.email = "Please enter a valid email address";
@@ -215,7 +280,7 @@ function ProfileSettings() {
   };
   
   // Handle profile form submission
-  const handleProfileSubmit = () => {
+  const handleProfileSubmit = async () => {
     // Validate form
     const validationErrors = validateProfileForm();
     setProfileErrors(validationErrors);
@@ -231,23 +296,80 @@ function ProfileSettings() {
     
     setIsProfileSubmitting(true);
     
-    // In a real app, you would dispatch an action to update the profile
-    // For demo purposes, we'll simulate a successful update
-    setTimeout(() => {
+    try {
+      // First, handle image upload if there's a new image
+      let profileImageUrl = profileData.profileImage;
+      
+      if (uploadedImage) {
+        const formData = new FormData();
+        formData.append('profileImage', uploadedImage);
+        
+        const imageResult = await uploadProfileImage(formData);
+        profileImageUrl = imageResult.imageUrl;
+      }
+      
+      // Update profile with all data including the new image URL
+      const updatedProfileData = {
+        ...profileData,
+        profileImage: profileImageUrl
+      };
+      
+      const result = await updateUserProfile(updatedProfileData);
+      
       toast({
         title: "Profile updated successfully",
         description: "Your profile information has been saved.",
       });
-      setIsProfileSubmitting(false);
-      setIsEditing(false);
       
-      // In a real app, this would come from the API response
-      // dispatch(updateUserProfile(profileData));
-    }, 1000);
+      // Update local state with the returned user data
+      setProfileData({
+        userName: result.user.userName || "",
+        email: result.user.email || "",
+        phone: result.user.phone || "",
+        bio: result.user.bio || "",
+        location: result.user.location || "",
+        profileImage: result.user.profileImage || "",
+        interestedCategories: result.user.interestedCategories || [],
+      });
+      
+      setIsEditing(false);
+      setImagePreview(null);
+      setUploadedImage(null);
+      
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      
+      // Handle different error scenarios
+      if (error.response && error.response.status === 400) {
+        // Validation errors from server
+        const serverErrors = error.response.data.errors;
+        const formattedErrors = {};
+        
+        serverErrors.forEach(err => {
+          formattedErrors[err.param] = err.msg;
+        });
+        
+        setProfileErrors({...validationErrors, ...formattedErrors});
+        
+        toast({
+          title: "Validation error",
+          description: "Please check the form for errors.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error updating profile",
+          description: error.response?.data?.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsProfileSubmitting(false);
+    }
   };
   
-  // Handle password form submission
-  const handlePasswordSubmit = () => {
+  // Enhanced password update
+  const handlePasswordSubmit = async () => {
     // Validate form
     const validationErrors = validatePasswordForm();
     setPasswordErrors(validationErrors);
@@ -263,42 +385,137 @@ function ProfileSettings() {
     
     setIsPasswordSubmitting(true);
     
-    // In a real app, you would dispatch an action to update the password
-    // For demo purposes, we'll simulate a successful update
-    setTimeout(() => {
+    try {
+      await updatePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      
       toast({
         title: "Password updated successfully",
         description: "Your password has been changed.",
       });
-      setIsPasswordSubmitting(false);
+      
+      // Clear password form
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
       
-      // In a real app, this would be an API call
-      // dispatch(updateUserPassword(passwordData));
-    }, 1000);
+    } catch (error) {
+      console.error("Error updating password:", error);
+      
+      // Handle invalid current password
+      if (error.response && error.response.status === 400) {
+        if (error.response.data.message === "Current password is incorrect") {
+          setPasswordErrors({
+            ...passwordErrors,
+            currentPassword: "Current password is incorrect"
+          });
+        } else {
+          toast({
+            title: "Error updating password",
+            description: error.response.data.message || "Please try again.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error updating password",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsPasswordSubmitting(false);
+    }
   };
   
   // Handle notification settings submission
-  const handleNotificationSubmit = () => {
+  const handleNotificationSubmit = async () => {
     setIsNotificationSubmitting(true);
     
-    // In a real app, you would dispatch an action to update notification settings
-    // For demo purposes, we'll simulate a successful update
-    setTimeout(() => {
+    try {
+      await updateUserProfile({
+        emailNotifications: notificationSettings.emailNotifications,
+        orderUpdates: notificationSettings.orderUpdates,
+        promotions: notificationSettings.promotions,
+        newsletter: notificationSettings.newsletter
+      });
+      
       toast({
         title: "Notification preferences updated",
       });
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      toast({
+        title: "Error updating preferences",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsNotificationSubmitting(false);
-      
-      // In a real app, this would be an API call
-      // dispatch(updateNotificationSettings(notificationSettings));
-    }, 1000);
+    }
   };
   
+  // Handle account deactivation
+  const handleDeactivateAccount = async () => {
+    // Confirm with user before proceeding
+    if (window.confirm("Are you sure you want to deactivate your account? This action cannot be undone.")) {
+      try {
+        await deactivateAccount();
+        
+        toast({
+          title: "Account deactivated",
+          description: "Your account has been deactivated. You will be logged out shortly.",
+        });
+        
+        // Log user out after deactivation
+        setTimeout(() => {
+          // Assuming logout function is available in Redux
+          // dispatch(logout());
+          
+          // Alternatively, clear local storage and redirect to login
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }, 2000);
+        
+      } catch (error) {
+        console.error("Error deactivating account:", error);
+        toast({
+          title: "Error deactivating account",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (apiError) {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Profile</h3>
+        <p className="text-red-700">{apiError}</p>
+        <Button 
+          onClick={() => window.location.reload()}
+          variant="outline"
+          className="mt-4"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -357,7 +574,7 @@ function ProfileSettings() {
                       <>
                         <AvatarImage src={profileData.profileImage} alt="Profile" />
                         <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                          {profileData.name ? profileData.name[0].toUpperCase() : <UserCircle />}
+                          {profileData.userName ? profileData.userName[0].toUpperCase() : <UserCircle />}
                         </AvatarFallback>
                       </>
                     )}
@@ -394,7 +611,7 @@ function ProfileSettings() {
                 </div>
                 
                 <div className="text-center sm:text-left">
-                  <h3 className="text-2xl font-bold">{profileData.name || "Profile"}</h3>
+                  <h3 className="text-2xl font-bold">{profileData.userName || "Profile"}</h3>
                   <p className="text-gray-500">{profileData.email || "No email provided"}</p>
                   {!isEditing && profileData.bio && (
                     <p className="mt-2 text-sm text-gray-600 max-w-md">{profileData.bio}</p>
@@ -423,19 +640,19 @@ function ProfileSettings() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">
+                    <Label htmlFor="userName">
                       Full Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="name"
-                      name="name"
-                      value={profileData.name}
+                      id="userName"
+                      name="userName"
+                      value={profileData.userName}
                       onChange={handleProfileChange}
                       disabled={!isEditing}
-                      className={profileErrors.name ? "border-red-500" : ""}
+                      className={profileErrors.userName ? "border-red-500" : ""}
                     />
-                    {profileErrors.name && (
-                      <p className="text-sm text-red-500">{profileErrors.name}</p>
+                    {profileErrors.userName && (
+                      <p className="text-sm text-red-500">{profileErrors.userName}</p>
                     )}
                   </div>
                   
@@ -716,6 +933,7 @@ function ProfileSettings() {
   <Button 
     variant="destructive" 
     className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white hover:text-white"
+    onClick={handleDeactivateAccount}
   >
     <Trash2 className="mr-2 h-4 w-4" />
     Deactivate Account
