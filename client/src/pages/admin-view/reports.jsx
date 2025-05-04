@@ -21,9 +21,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-// Fix the imports to use dynamic imports
-const jsPDF = () => import('jspdf').then(module => module.default);
-import 'jspdf-autotable';
 
 function AdminReports() {
   const dispatch = useDispatch();
@@ -221,9 +218,12 @@ function AdminReports() {
     if (reportData.length === 0) return;
     
     try {
-      // Dynamically import jsPDF
-      const jsPDFModule = await jsPDF();
-      const doc = new jsPDFModule();
+      // Dynamically import both jsPDF and the autotable plugin
+      const jsPDFModule = await import('jspdf');
+      const jsPDF = jsPDFModule.default;
+      await import('jspdf-autotable');
+      
+      const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       
       // Add title

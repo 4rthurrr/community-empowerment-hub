@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const dbConnect = require('./utils/dbConnect');
 
 // Routes imports
 const authRouter = require("./routes/auth/auth-routes");
@@ -22,14 +22,23 @@ const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const userRouter = require('./routes/userRoutes');
 
+// Import models
+const Portfolio = require('./models/Portfolio');
+
 console.log("Connecting to MongoDB...");
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-  });
+// Use our new dbConnect helper in serverless environments
+if (process.env.NODE_ENV === 'production') {
+  // In production, we'll connect on-demand in our API routes
+  console.log("Production environment detected - will connect to MongoDB as needed");
+} else {
+  // In development, connect immediately
+  dbConnect()
+    .then(() => console.log("MongoDB connected in development mode"))
+    .catch((error) => {
+      console.error("MongoDB connection error:", error);
+    });
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -59,13 +68,20 @@ app.use(
 // In server.js (temporary test)
 app.get('/api/verify', async (req, res) => {
   try {
+    // Connect to MongoDB in serverless environment
+    if (process.env.NODE_ENV === 'production') {
+      await dbConnect();
+    }
+    
     const count = await Portfolio.countDocuments();
     res.json({ 
       database: "test",
       collection: "portfolios",
-      document_count: count
+      document_count: count,
+      environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
+    console.error('Verify endpoint error:', error);
     res.status(500).json({ error: error.message });
   }
 });
