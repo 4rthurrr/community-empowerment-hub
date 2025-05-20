@@ -4,6 +4,9 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dbConnect = require('./utils/dbConnect');
 
+
+const path = require("path");
+
 // Routes imports
 const authRouter = require("./routes/auth/auth-routes");
 const adminProductsRouter = require("./routes/admin/products-routes");
@@ -22,37 +25,34 @@ const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const userRouter = require('./routes/userRoutes');
 
-// Import models
-const Portfolio = require('./models/Portfolio');
-
 console.log("Connecting to MongoDB...");
 
-// Use our new dbConnect helper in serverless environments
-if (process.env.NODE_ENV === 'production') {
-  // In production, we'll connect on-demand in our API routes
-  console.log("Production environment detected - will connect to MongoDB as needed");
-} else {
-  // In development, connect immediately
-  dbConnect()
-    .then(() => console.log("MongoDB connected in development mode"))
-    .catch((error) => {
-      console.error("MongoDB connection error:", error);
-    });
-}
+// Connect to MongoDB
+dbConnect()
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
+  });
 
 const app = express();
+
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  // The "catchall" handler: for any request that doesn't match one above, send back index.html.
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+  });
+}
+
+
 const PORT = process.env.PORT || 5000;
 
-// Updated CORS configuration to work with Vercel
+// Standard CORS configuration
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? [
-          'https://community-empowerment-hub.vercel.app', 
-          'https://community-empowerment-hub-git-main.vercel.app',
-          new RegExp(`https://community-empowerment-hub-.*\\.vercel\\.app`)
-        ]
-      : "http://localhost:5173",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
@@ -65,34 +65,15 @@ app.use(
   })
 );
 
-// In server.js (temporary test)
-app.get('/api/verify', async (req, res) => {
-  try {
-    // Connect to MongoDB in serverless environment
-    if (process.env.NODE_ENV === 'production') {
-      await dbConnect();
-    }
-    
-    const count = await Portfolio.countDocuments();
-    res.json({ 
-      database: "test",
-      collection: "portfolios",
-      document_count: count,
-      environment: process.env.NODE_ENV || 'development'
-    });
-  } catch (error) {
-    console.error('Verify endpoint error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.use(cookieParser());
 app.use(express.json());
-// Add this before route middlewares
+
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
+
 // Route middlewares
 app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
@@ -113,10 +94,5 @@ app.use('/api/user', userRouter);
 
 app.use("/api/reviews", require("./routes/shop/review-routes"));
 
-// Export for Vercel serverless function
-module.exports = app;
-
-// Only listen directly when not imported by Vercel
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
-}
+// Start the server
+app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
